@@ -66,6 +66,7 @@ body {
   background-size: cover;
   background-attachment: fixed;
   background-position: center;
+  isolation: isolate;
   min-height: 100vh;
   transition: background-color 0.3s ease;
 }

@@ -1,12 +1,13 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import Header from '@components/layout/Header.astro';
-import Footer from '@components/layout/Footer.astro';
-import { site } from '@data/site';
-import { getLangFromUrl, defaultLang } from '@i18n/ui';
-import '@styles/global.css';
-import '@styles/glass.css';
-import '@styles/typography.css';
+import { ClientRouter } from "astro:transitions";
+import Header from "@components/layout/Header.astro";
+import Footer from "@components/layout/Footer.astro";
+import SharedBackground from "@components/layout/SharedBackground.astro";
+import { site } from "@data/site";
+import { getLangFromUrl, defaultLang } from "@i18n/ui";
+import "@styles/global.css";
+import "@styles/glass.css";
+import "@styles/typography.css";
 
 export interface Props {
   title?: string;
@@ -19,19 +20,29 @@ export interface Props {
 }
 
 const lang = getLangFromUrl(Astro.url);
-const { title, description, image, noContainer = false, hideFooter = false } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  noContainer = false,
+  hideFooter = false,
+} = Astro.props;
 const isHomeScreen = noContainer && hideFooter;
 
 const fullTitle = title
   ? `${title} | ${site.title[lang]}`
   : `${site.title[lang]} — ${site.subtitle[lang]}`;
 const desc = description ?? site.description[lang];
-const ogImage = image ?? '/images/placeholders/og-default.placeholder.svg';
+const ogImage = image ?? "/images/placeholders/og-default.placeholder.svg";
 const canonical = new URL(Astro.url.pathname, site.siteUrl).toString();
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="light" class:list={[isHomeScreen && 'is-home-screen']}>
+<html
+  lang={lang}
+  data-theme="light"
+  class:list={[isHomeScreen && "is-home-screen"]}
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -47,55 +58,80 @@ const canonical = new URL(Astro.url.pathname, site.siteUrl).toString();
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL(ogImage, site.siteUrl).toString()} />
+    <meta
+      property="og:image"
+      content={new URL(ogImage, site.siteUrl).toString()}
+    />
     <meta property="og:site_name" content={site.title[lang]} />
-    <meta property="og:locale" content={lang === 'zh' ? 'zh_CN' : 'en_US'} />
+    <meta property="og:locale" content={lang === "zh" ? "zh_CN" : "en_US"} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={desc} />
-    <meta name="twitter:image" content={new URL(ogImage, site.siteUrl).toString()} />
+    <meta
+      name="twitter:image"
+      content={new URL(ogImage, site.siteUrl).toString()}
+    />
 
     <!-- RSS / Atom -->
-    <link rel="alternate" type="application/rss+xml" title={site.title[lang]} href="/rss.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={site.title[lang]}
+      href="/rss.xml"
+    />
 
     <!-- Sitemap -->
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <!-- KaTeX math rendering styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css"
+    />
 
     <!-- 主题/主色尽早初始化，避免闪烁 -->
     <script is:inline define:vars={{ defaultBrand: site.brand.default }}>
       (function () {
         try {
-          const savedTheme = localStorage.getItem('blog:theme') || 'auto';
+          const savedTheme = localStorage.getItem("blog:theme") || "auto";
           const resolved =
-            savedTheme === 'auto'
-              ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            savedTheme === "auto"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
               : savedTheme;
-          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.setAttribute("data-theme", resolved);
         } catch {}
         try {
-          const c = localStorage.getItem('blog:brand-color') || defaultBrand;
-          const v = c.replace('#', '');
+          const c = localStorage.getItem("blog:brand-color") || defaultBrand;
+          const v = c.replace("#", "");
           const r = parseInt(v.slice(0, 2), 16);
           const g = parseInt(v.slice(2, 4), 16);
           const b = parseInt(v.slice(4, 6), 16);
-          document.documentElement.style.setProperty('--color-brand', r + ' ' + g + ' ' + b);
+          document.documentElement.style.setProperty(
+            "--color-brand",
+            r + " " + g + " " + b,
+          );
         } catch {}
       })();
     </script>
 
     <ClientRouter />
   </head>
-  <body class:list={[isHomeScreen && 'is-home-screen']}>
-    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-md focus:bg-brand-500 focus:text-white">跳到主要内容</a>
+  <body class:list={[isHomeScreen && "is-home-screen"]}>
+    <SharedBackground />
+
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-brand-500 focus:px-3 focus:py-2 focus:text-white"
+      >跳到主要内容</a
+    >
 
     <Header />
 
-    <main id="main" class={noContainer ? '' : 'mx-auto max-w-5xl px-4 py-8'}>
+    <main id="main" class={noContainer ? "" : "mx-auto max-w-5xl px-4 py-8"}>
       <slot />
     </main>
 

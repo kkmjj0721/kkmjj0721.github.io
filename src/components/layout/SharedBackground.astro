@@ -1,0 +1,177 @@
+---
+const lightBackgroundVideo = "/images/backgrounds/tomori.mp4";
+const darkBackgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
+---
+
+<div class="site-background" data-site-background aria-hidden="true">
+  <video
+    class="site-background__video site-background__video--light"
+    data-site-background-video
+    data-src-light={lightBackgroundVideo}
+    data-src-dark={darkBackgroundVideo}
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="none"></video>
+  <div class="site-background__overlay"></div>
+</div>
+
+<script>
+  declare global {
+    interface Window {
+      __siteBackgroundController?: AbortController;
+      __siteBackgroundPageLoadBound?: boolean;
+    }
+  }
+
+  const initSiteBackground = () => {
+    window.__siteBackgroundController?.abort();
+
+    const controller = new AbortController();
+    window.__siteBackgroundController = controller;
+    const { signal } = controller;
+
+    const root = document.documentElement;
+    const background = document.querySelector<HTMLElement>(
+      "[data-site-background]",
+    );
+    const video = document.querySelector<HTMLVideoElement>(
+      "[data-site-background-video]",
+    );
+
+    if (!background || !video) return;
+
+    const setReady = (isReady: boolean) => {
+      background.classList.toggle("is-video-ready", isReady);
+      video.classList.toggle("is-video-ready", isReady);
+    };
+
+    const removeVideoSource = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    const syncVideoSource = () => {
+      const theme =
+        root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const nextSrc =
+        theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
+
+      background.dataset.theme = theme;
+      video.classList.toggle("site-background__video--dark", theme === "dark");
+      video.classList.toggle("site-background__video--light", theme !== "dark");
+
+      if (!nextSrc) {
+        setReady(false);
+        removeVideoSource();
+        return;
+      }
+
+      if (video.getAttribute("src") !== nextSrc) {
+        setReady(false);
+        removeVideoSource();
+        video.setAttribute("src", nextSrc);
+        video.load();
+      }
+
+      void video.play().catch(() => {
+        setReady(false);
+      });
+    };
+
+    video.addEventListener("loadeddata", () => setReady(true), { signal });
+    video.addEventListener("error", () => setReady(false), { signal });
+
+    const observer = new MutationObserver(syncVideoSource);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    signal.addEventListener("abort", () => observer.disconnect(), {
+      once: true,
+    });
+
+    syncVideoSource();
+  };
+
+  initSiteBackground();
+
+  if (!window.__siteBackgroundPageLoadBound) {
+    document.addEventListener("astro:page-load", initSiteBackground);
+    window.__siteBackgroundPageLoadBound = true;
+  }
+</script>
+
+<style>
+  .site-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .site-background__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    filter: saturate(1.08) contrast(1.02);
+    transition: opacity 0.35s ease;
+  }
+
+  .site-background__video--light.is-video-ready {
+    opacity: 0.92;
+    filter: saturate(1.03) contrast(0.98) brightness(1.04);
+  }
+
+  .site-background__video--dark.is-video-ready {
+    opacity: 0.86;
+  }
+
+  .site-background__overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.46) 0%,
+        rgb(255 255 255 / 0.18) 42%,
+        rgb(255 255 255 / 0.36) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgb(255 255 255 / 0.34),
+        rgb(255 255 255 / 0.08) 52%,
+        rgb(255 255 255 / 0.3)
+      );
+    transition: opacity 0.35s ease;
+  }
+
+  .site-background.is-video-ready .site-background__overlay {
+    opacity: 1;
+  }
+
+  :global(html[data-theme="dark"]) .site-background__overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(2 6 23 / 0.52) 0%,
+        rgb(15 23 42 / 0.18) 42%,
+        rgb(2 6 23 / 0.58) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgb(2 6 23 / 0.22),
+        rgb(2 6 23 / 0.04) 52%,
+        rgb(2 6 23 / 0.28)
+      );
+  }
+</style>

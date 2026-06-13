@@ -49,8 +49,6 @@ const daysOnline = Number.isFinite(startedAtMs)
 
 const visibleSocial = site.social.filter((item) => item.show);
 const trackingCount = animeCount + gameCount + bookCount + movieCount;
-const lightBackgroundVideo = "/images/backgrounds/tomori.mp4";
-const darkBackgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
 const musicSrc = "/audio/bgm/Departures.mp3";
 
 const copy = {
@@ -197,21 +195,6 @@ const dashboardItems = [
   data-player-play-label={copy.playerPlay}
   data-player-pause-label={copy.playerPause}
 >
-  <div class="home-dashboard__media" aria-hidden="true">
-    <div class="home-dashboard__placeholder"></div>
-    <video
-      class="home-dashboard__video home-dashboard__video--light"
-      data-home-background-video
-      data-src-light={lightBackgroundVideo}
-      data-src-dark={darkBackgroundVideo}
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="none"></video>
-    <div class="home-dashboard__overlay"></div>
-  </div>
-
   <div class="home-dashboard__inner">
     <div class="home-dashboard__layout">
       <aside class="home-stack home-stack--profile">
@@ -310,12 +293,12 @@ const dashboardItems = [
             >
               <Icon
                 name="mdi:play"
-                class="h-6 w-6 player-toggle__play"
+                class="player-toggle__play h-6 w-6"
                 aria-hidden="true"
               />
               <Icon
                 name="mdi:pause"
-                class="h-6 w-6 player-toggle__pause"
+                class="player-toggle__pause h-6 w-6"
                 aria-hidden="true"
               />
             </button>
@@ -545,14 +528,12 @@ const dashboardItems = [
   declare global {
     interface Window {
       __homeDashboardController?: AbortController;
-      __homeDashboardVideoObserver?: MutationObserver;
       __homeDashboardPageLoadBound?: boolean;
     }
   }
 
   const initHomeDashboard = () => {
     window.__homeDashboardController?.abort();
-    window.__homeDashboardVideoObserver?.disconnect();
 
     const controller = new AbortController();
     window.__homeDashboardController = controller;
@@ -560,72 +541,6 @@ const dashboardItems = [
 
     const dashboard = document.querySelector<HTMLElement>(".home-dashboard");
     const root = document.documentElement;
-    const video = document.querySelector<HTMLVideoElement>(
-      "[data-home-background-video]",
-    );
-
-    if (video) {
-      const removeVideoSource = () => {
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
-      };
-
-      const syncVideoSource = () => {
-        const theme =
-          root.getAttribute("data-theme") === "dark" ? "dark" : "light";
-        const nextSrc =
-          theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
-
-        video.classList.toggle("home-dashboard__video--dark", theme === "dark");
-        video.classList.toggle(
-          "home-dashboard__video--light",
-          theme !== "dark",
-        );
-
-        if (!nextSrc) {
-          video.classList.remove("is-video-ready");
-          removeVideoSource();
-          return;
-        }
-
-        if (video.getAttribute("src") !== nextSrc) {
-          video.classList.remove("is-video-ready");
-          removeVideoSource();
-          video.setAttribute("src", nextSrc);
-          video.load();
-        }
-
-        void video.play().catch(() => {
-          video.classList.remove("is-video-ready");
-        });
-      };
-
-      video.addEventListener(
-        "loadeddata",
-        () => {
-          video.classList.add("is-video-ready");
-        },
-        { signal },
-      );
-
-      video.addEventListener(
-        "error",
-        () => {
-          video.classList.remove("is-video-ready");
-        },
-        { signal },
-      );
-
-      const observer = new MutationObserver(syncVideoSource);
-      observer.observe(root, {
-        attributes: true,
-        attributeFilter: ["data-theme"],
-      });
-      window.__homeDashboardVideoObserver = observer;
-
-      syncVideoSource();
-    }
 
     const player = document.querySelector<HTMLElement>("[data-home-player]");
     const audio = document.querySelector<HTMLAudioElement>("[data-home-audio]");
@@ -843,104 +758,6 @@ const dashboardItems = [
     --home-border-alpha: 0.18;
     --home-shadow: 0 0 0;
     --home-chip: 15 23 42;
-  }
-
-  .home-dashboard__media {
-    position: fixed;
-    inset: 0;
-    z-index: -3;
-    min-height: 100vh;
-    min-height: 100svh;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .home-dashboard__placeholder {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(
-        circle at 20% 16%,
-        rgb(var(--color-brand-200) / 0.44),
-        transparent 28rem
-      ),
-      radial-gradient(
-        circle at 78% 18%,
-        rgb(125 211 252 / 0.32),
-        transparent 30rem
-      ),
-      linear-gradient(135deg, rgb(248 250 252), rgb(226 232 240));
-    opacity: 1;
-    transition: opacity 0.35s ease;
-  }
-
-  .home-dashboard__video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    filter: saturate(1.08) contrast(1.02);
-    transition: opacity 0.35s ease;
-  }
-
-  .home-dashboard__video--light.is-video-ready {
-    opacity: 0.92;
-    filter: saturate(1.03) contrast(0.98) brightness(1.04);
-  }
-
-  .home-dashboard__overlay {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(
-        180deg,
-        rgb(255 255 255 / 0.46) 0%,
-        rgb(255 255 255 / 0.18) 42%,
-        rgb(255 255 255 / 0.36) 100%
-      ),
-      linear-gradient(
-        90deg,
-        rgb(255 255 255 / 0.34),
-        rgb(255 255 255 / 0.08) 52%,
-        rgb(255 255 255 / 0.3)
-      );
-  }
-
-  :global(html[data-theme="dark"]) .home-dashboard__media {
-    background:
-      radial-gradient(
-        circle at 18% 20%,
-        rgb(var(--color-brand-500) / 0.32),
-        transparent 32rem
-      ),
-      linear-gradient(135deg, rgb(16 24 39), rgb(75 50 98), rgb(2 6 23));
-  }
-
-  :global(html[data-theme="dark"]) .home-dashboard__placeholder,
-  :global(html[data-theme="dark"]) .home-dashboard__video--light {
-    opacity: 0;
-  }
-
-  :global(html[data-theme="dark"]) .home-dashboard__video--dark.is-video-ready {
-    opacity: 0.86;
-  }
-
-  :global(html[data-theme="dark"]) .home-dashboard__overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgb(2 6 23 / 0.52) 0%,
-        rgb(15 23 42 / 0.18) 42%,
-        rgb(2 6 23 / 0.58) 100%
-      ),
-      linear-gradient(
-        90deg,
-        rgb(2 6 23 / 0.22),
-        rgb(2 6 23 / 0.04) 52%,
-        rgb(2 6 23 / 0.28)
-      );
   }
 
   .home-dashboard__inner {
