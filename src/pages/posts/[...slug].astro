@@ -1,0 +1,33 @@
+---
+import type { GetStaticPaths } from 'astro';
+import PostLayout from '@layouts/PostLayout.astro';
+import { getPublishedPosts, findRelatedPosts, getPrevNext, getSeriesPosts, stripLangPrefix } from '@utils/posts';
+import { getCollection } from 'astro:content';
+
+export const getStaticPaths = (async () => {
+  const all = await getCollection('posts');
+  const visible = all.filter((p) => {
+    if (p.data.lang !== 'zh') return false;
+    if (import.meta.env.PROD && p.data.draft) return false;
+    if (p.data.pubDate.getTime() > Date.now()) return false;
+    return true;
+  });
+  return visible.map((post) => ({
+    params: { slug: stripLangPrefix(post.slug) },
+    props: { post },
+  }));
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+const langPosts = await getPublishedPosts('zh');
+const related = findRelatedPosts(post, langPosts);
+const { prev, next } = getPrevNext(post, langPosts);
+const { Content, headings, remarkPluginFrontmatter } = await post.render();
+const seriesPosts = post.data.series ? getSeriesPosts(post.data.series, langPosts) : [];
+const readingTime = (remarkPluginFrontmatter as any)?.readingTime;
+const wordCount = (remarkPluginFrontmatter as any)?.wordCount;
+---
+
+<PostLayout post={post} prev={prev} next={next} related={related} readingTime={readingTime} wordCount={wordCount} headings={headings} seriesPosts={seriesPosts}>
+  <Content />
+</PostLayout>

@@ -1,0 +1,36 @@
+---
+import EmbedFrame from './EmbedFrame.astro';
+
+export interface Props {
+  title: string;
+  bvid?: string;
+  aid?: string | number;
+  cid?: string | number;
+  page?: number;
+  autoplay?: boolean;
+}
+
+const { title, bvid, aid, cid, page = 1, autoplay = false } = Astro.props;
+const params = new URLSearchParams({
+  page: String(Math.max(1, Math.floor(page))),
+  autoplay: autoplay ? '1' : '0',
+});
+
+if (bvid && bvid.trim()) {
+  params.set('bvid', bvid.trim());
+} else if (aid !== undefined && cid !== undefined) {
+  params.set('aid', String(aid));
+  params.set('cid', String(cid));
+} else {
+  throw new Error('Bilibili embed requires either bvid or both aid and cid.');
+}
+
+const src = `https://player.bilibili.com/player.html?${params.toString()}`;
+---
+
+<EmbedFrame
+  src={src}
+  title={title}
+  allow="autoplay; fullscreen; picture-in-picture"
+  sandbox="allow-scripts allow-presentation"
+/>

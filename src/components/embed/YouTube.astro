@@ -1,0 +1,34 @@
+---
+import EmbedFrame from './EmbedFrame.astro';
+
+export interface Props {
+  title: string;
+  videoId: string;
+  start?: number;
+}
+
+const { title, videoId, start } = Astro.props;
+const normalizedVideoId = videoId.trim();
+
+if (!normalizedVideoId) {
+  throw new Error('YouTube embed requires a non-empty videoId.');
+}
+
+const params = new URLSearchParams({
+  rel: '0',
+  modestbranding: '1',
+});
+
+if (start !== undefined) {
+  params.set('start', String(Math.max(0, Math.floor(start))));
+}
+
+const src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(normalizedVideoId)}?${params.toString()}`;
+---
+
+<EmbedFrame
+  src={src}
+  title={title}
+  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+  sandbox="allow-scripts allow-presentation"
+/>

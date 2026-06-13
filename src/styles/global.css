@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   主题变量
+   ─────────────────────────────────────────────────────────────
+   通过 :root 上 --color-brand 系列驱动整站主色，
+   首页拾色器只需写 root.style.setProperty('--color-brand', ...)
+   并把 6 阶梯度也算出来即可（见 utils/theme.ts）
+*/
+:root {
+  /* 主色（rgb 三元组，便于 Tailwind 透明度合成）*/
+  --color-brand: 124 58 237;
+  --color-brand-50: 245 243 255;
+  --color-brand-100: 237 233 254;
+  --color-brand-200: 221 214 254;
+  --color-brand-300: 196 181 253;
+  --color-brand-400: 167 139 250;
+  --color-brand-500: 139 92 246;
+  --color-brand-600: 124 58 237;
+  --color-brand-700: 109 40 217;
+  --color-brand-800: 91 33 182;
+  --color-brand-900: 76 29 149;
+
+  /* 文本 / 表面色 — 亮色模式 */
+  --color-ink: 23 23 33;
+  --color-muted: 100 100 120;
+  --color-surface: 255 255 255;
+
+  /* 毛玻璃 */
+  --glass-bg: 255 255 255;
+  --glass-bg-alpha: 0.55;
+  --glass-border: 255 255 255;
+  --glass-border-alpha: 0.35;
+  --glass-blur: 20px;
+
+  /* 背景层 */
+  --bg-base: 248 250 252;
+}
+
+[data-theme="dark"] {
+  --color-ink: 230 230 240;
+  --color-muted: 160 160 180;
+  --color-surface: 30 30 45;
+
+  --glass-bg: 20 20 35;
+  --glass-bg-alpha: 0.55;
+  --glass-border: 255 255 255;
+  --glass-border-alpha: 0.12;
+
+  --bg-base: 12 12 24;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  @apply font-sans text-ink;
+  background: rgb(var(--bg-base));
+  background-image: var(--bg-image, none);
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+}
+
+/* 渐变背景层（即使没设置背景图也有美感）*/
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgb(var(--color-brand-300) / 0.25) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgb(var(--color-brand-500) / 0.2) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgb(var(--color-brand-700) / 0.3) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgb(var(--color-brand-900) / 0.3) 0%,
+      transparent 50%
+    );
+}
+
+::selection {
+  background: rgb(var(--color-brand) / 0.3);
+  color: rgb(var(--color-ink));
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-brand) / 0.4);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-brand) / 0.7);
+}
+
+/* 链接 */
+a {
+  color: rgb(var(--color-brand-600));
+  transition: color 0.2s;
+}
+[data-theme="dark"] a {
+  color: rgb(var(--color-brand-300));
+}
+
+/* 尊重用户偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,66 @@
+/**
+ * 毛玻璃工具类
+ * ─────────────────────────────────────────────
+ * 使用方法: <div class="glass">...</div>
+ * 强度变体: .glass-strong / .glass-soft
+ */
+
+.glass {
+  background: rgb(var(--glass-bg) / var(--glass-bg-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+  border-radius: 1rem;
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+.glass-strong {
+  background: rgb(var(--glass-bg) / 0.75);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgb(var(--glass-border) / 0.5);
+  border-radius: 1rem;
+  box-shadow:
+    0 12px 48px rgb(0 0 0 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+.glass-soft {
+  background: rgb(var(--glass-bg) / 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgb(var(--glass-border) / 0.2);
+  border-radius: 0.75rem;
+}
+
+.glass-pill {
+  background: rgb(var(--glass-bg) / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(var(--glass-border) / 0.3);
+  border-radius: 9999px;
+}
+
+/* 鼠标悬停时的轻微高亮 */
+.glass-hover {
+  transition: all 0.3s ease;
+}
+.glass-hover:hover {
+  background: rgb(var(--glass-bg) / 0.75);
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 48px rgb(0 0 0 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+/* Safari 不支持 backdrop-filter 时的降级 */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass,
+  .glass-strong,
+  .glass-soft,
+  .glass-pill {
+    background: rgb(var(--glass-bg) / 0.92);
+  }
+}

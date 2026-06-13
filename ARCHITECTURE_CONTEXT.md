@@ -1,0 +1,27 @@
+# Architecture Context
+
+- updated_at: 2026-06-13
+- release_stage: phase_5_release_logging
+- status: verified
+- framework: Astro
+- validation:
+  - npm_run_lint: PASS
+  - npm_run_build: PASS
+  - final_gate: "[ALL_TESTS_PASSED]"
+- git_metadata: unavailable_in_workspace_view
+
+## Current Architecture
+
+- homepage_surface: translucent dashboard implemented in `src/components/home/HomeDashboard.astro` and mounted from `src/pages/index.astro`
+- post_surface: `src/layouts/PostLayout.astro` now includes TOC scrollspy, KaTeX CSS support, Mermaid lazy render, reading progress, and series sidebar support
+- embed_surface: `src/components/embed/EmbedFrame.astro` centralizes iframe normalization and sandbox hardening; Bilibili, YouTube, and CodePen wrappers reuse it
+- header_surface: `src/components/layout/Header.astro` rebinds event handlers on `astro:page-load` for Astro ClientRouter compatibility
+- tooling_surface: ESLint 9 flat config is active in `eslint.config.mjs`
+- content_surface: demo/article showcase content exists for Phase 3 validation
+
+## Residual Warnings
+
+- comment_system: still placeholder-only, planned for later Phase 6 integration
+- site_search: search UI remains placeholder-only, planned for later Phase 6 integration
+- generated_artifacts: `dist/` is present locally but is not the source of truth
+- git_status: commit and status output could not be produced from this workspace because git metadata was not available

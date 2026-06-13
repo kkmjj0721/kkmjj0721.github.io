@@ -1,0 +1,371 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { CollectionEntry } from 'astro:content';
+import TableOfContents from '@components/post/TableOfContents.astro';
+import SeriesSidebar from '@components/post/SeriesSidebar.astro';
+import { formatDate, getSeriesPosts, postUrl } from '@utils/posts';
+import { getLangFromUrl, useTranslations, localizedPath } from '@i18n/ui';
+import { site } from '@data/site';
+
+type Post = CollectionEntry<'posts'>;
+type TocHeading = { depth: number; slug: string; text: string };
+const GENERATED_FOOTNOTE_SLUGS = new Set(['footnote-label']);
+
+function isTocHeading(heading: TocHeading) {
+  if (heading.depth < 2 || heading.depth > 4 || !heading.slug || !heading.text) return false;
+  if (GENERATED_FOOTNOTE_SLUGS.has(heading.slug)) return false;
+  return true;
+}
+
+function unwrapGeneratedFootnoteHeading(html: string) {
+  return html.replace(
+    /(<h[2-4]\b(?=[^>]*\bid="footnote-label")(?=[^>]*\bclass="[^"]*\bsr-only\b[^"]*")[^>]*>)\s*<a\b[^>]*\bhref="#footnote-label"[^>]*>([\s\S]*?)<\/a>\s*(<\/h[2-4]>)/g,
+    '$1$2$3'
+  );
+}
+
+export interface Props {
+  post: Post;
+  prev?: Post | null;
+  next?: Post | null;
+  related?: Post[];
+  readingTime?: number;
+  wordCount?: number;
+  headings?: TocHeading[];
+  allPosts?: Post[];
+  seriesPosts?: Post[];
+}
+
+const {
+  post,
+  prev,
+  next,
+  related = [],
+  readingTime,
+  wordCount,
+  headings = [],
+  allPosts,
+  seriesPosts,
+} = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const ogImage = post.data.cover
+  ? (typeof post.data.cover === 'string' ? post.data.cover : post.data.cover.src)
+  : undefined;
+const tocHeadings = headings.filter(isTocHeading);
+const contentHtml = unwrapGeneratedFootnoteHeading(await Astro.slots.render('default'));
+const showToc = post.data.toc !== false && tocHeadings.length > 0;
+const resolvedSeriesPosts = post.data.series
+  ? (seriesPosts ?? (allPosts ? getSeriesPosts(post.data.series, allPosts) : [post]))
+  : [];
+const sortedSeriesPosts = [...resolvedSeriesPosts].sort((a, b) => {
+  const orderA = a.data.seriesOrder ?? Number.MAX_SAFE_INTEGER;
+  const orderB = b.data.seriesOrder ?? Number.MAX_SAFE_INTEGER;
+  if (orderA !== orderB) return orderA - orderB;
+  return a.data.pubDate.getTime() - b.data.pubDate.getTime();
+});
+const showSeries = Boolean(post.data.series && sortedSeriesPosts.length > 0);
+const showSidebar = showToc || showSeries;
+const tocTitle = lang === 'zh' ? '目录' : 'Contents';
+const seriesTitle = lang === 'zh' ? '系列文章' : 'Series';
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} image={ogImage}>
+  <!-- 阅读进度条 (Phase 3 完整实现) -->
+  <div id="reading-progress" class="fixed top-0 left-0 right-0 h-0.5 bg-brand-500 z-50 origin-left" style="transform: scaleX(0)"></div>
+
+  <div class:list={[
+    'mb-8',
+    showSidebar && 'xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-6 xl:items-start',
+  ]}>
+    <article class="glass p-6 md:p-10">
+      <!-- 标题区 -->
+      <header class="mb-8 pb-6 border-b border-brand-200/30">
+        {post.data.cover && (
+          <img
+            src={typeof post.data.cover === 'string' ? post.data.cover : post.data.cover.src}
+            alt={post.data.coverAlt ?? post.data.title}
+            class="w-full max-h-96 object-cover rounded-xl mb-6"
+          />
+        )}
+
+        <div class="flex items-center gap-2 text-sm text-muted mb-3 flex-wrap">
+          {post.data.categories.map((c) => (
+            <a href={localizedPath(`/categories/${c}/`, lang)} class="px-2 py-0.5 rounded-full bg-brand-100/50 dark:bg-brand-900/30">
+              📂 {c}
+            </a>
+          ))}
+          {post.data.sticky > 0 && (
+            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">📌 {t('status.sticky')}</span>
+          )}
+        </div>
+
+        <h1 class="font-serif text-3xl md:text-4xl font-bold mb-4 leading-tight">
+          {post.data.title}
+        </h1>
+
+        {post.data.description && (
+          <p class="text-muted text-lg leading-relaxed mb-4">{post.data.description}</p>
+        )}
+
+        <div class="flex items-center gap-4 text-xs text-muted flex-wrap">
+          <span>📅 {t('common.publishedAt')} {formatDate(post.data.pubDate, lang)}</span>
+          {post.data.updatedDate && (
+            <span>🔄 {t('common.updatedAt')} {formatDate(post.data.updatedDate, lang)}</span>
+          )}
+          {readingTime && <span>⏱️ {t('common.readingTime', { min: readingTime })}</span>}
+          {wordCount && <span>📝 {t('common.words', { count: wordCount })}</span>}
+        </div>
+      </header>
+
+      <!-- 正文 -->
+      <div class="prose-glass">
+        <Fragment set:html={contentHtml} />
+      </div>
+
+      <!-- 标签 -->
+      {post.data.tags.length > 0 && (
+        <div class="mt-10 pt-6 border-t border-brand-200/30">
+          <div class="flex flex-wrap gap-2">
+            {post.data.tags.map((tag) => (
+              <a
+                href={localizedPath(`/tags/${tag}/`, lang)}
+                class="px-3 py-1 rounded-full text-sm bg-brand-100/40 dark:bg-brand-900/30 hover:bg-brand-200/60"
+              >
+                #{tag}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- 版权 -->
+      <div class="mt-8 p-4 rounded-lg bg-brand-50/40 dark:bg-brand-900/20 text-sm text-muted">
+        <p>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener" class="font-semibold">{post.data.license}</a> 协议发布。</p>
+        <p class="mt-1">作者: <span class="font-semibold">{site.author.name[lang]}</span> · 转载请注明出处。</p>
+      </div>
+    </article>
+
+    {showSidebar && (
+      <aside class="mt-6 space-y-4 xl:mt-0 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto" aria-label={lang === 'zh' ? '文章辅助导航' : 'Post navigation'}>
+        {showSeries && <SeriesSidebar current={post} posts={sortedSeriesPosts} lang={lang} title={seriesTitle} />}
+        {showToc && <TableOfContents headings={tocHeadings} title={tocTitle} />}
+      </aside>
+    )}
+  </div>
+
+  <!-- 上一篇 / 下一篇 -->
+  {(prev || next) && (
+    <nav class="grid md:grid-cols-2 gap-4 mb-8">
+      {prev ? (
+        <a href={postUrl(prev)} class="glass glass-hover p-4 block">
+          <p class="text-xs text-muted mb-1">← {t('common.prevPost')}</p>
+          <p class="font-serif font-semibold line-clamp-1">{prev.data.title}</p>
+        </a>
+      ) : <div></div>}
+      {next ? (
+        <a href={postUrl(next)} class="glass glass-hover p-4 block md:text-right">
+          <p class="text-xs text-muted mb-1">{t('common.nextPost')} →</p>
+          <p class="font-serif font-semibold line-clamp-1">{next.data.title}</p>
+        </a>
+      ) : <div></div>}
+    </nav>
+  )}
+
+  <!-- 相关推荐 -->
+  {related.length > 0 && (
+    <section class="glass p-6 mb-8">
+      <h2 class="font-serif text-xl font-semibold mb-4 text-brand-700 dark:text-brand-300">
+        ✨ {t('common.relatedPosts')}
+      </h2>
+      <ul class="grid md:grid-cols-3 gap-3">
+        {related.map((p) => (
+          <li>
+            <a href={postUrl(p)} class="block p-3 rounded-lg hover:bg-brand-50/40 dark:hover:bg-brand-900/20 transition-colors">
+              <p class="font-serif font-semibold line-clamp-2">{p.data.title}</p>
+              <p class="text-xs text-muted mt-1">{formatDate(p.data.pubDate, lang)}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- 评论占位 (Phase 6 接入 Giscus) -->
+  <section class="glass p-6">
+    <h2 class="font-serif text-xl font-semibold mb-4 text-brand-700 dark:text-brand-300">💬 评论</h2>
+    <p class="text-muted text-sm text-center py-6">
+      💤 评论系统将在 Phase 6 接入 Giscus（基于 GitHub Discussions）
+    </p>
+  </section>
+
+  <!-- 阅读进度条、TOC scrollspy 与 Mermaid 按需渲染 -->
+  <script>
+    let cleanupPostEnhancements = () => {};
+
+    function initReadingProgress() {
+      const bar = document.getElementById('reading-progress');
+      if (!bar) return () => {};
+
+      const updateProgress = () => {
+        const h = document.documentElement;
+        const scrolled = h.scrollTop;
+        const max = h.scrollHeight - h.clientHeight;
+        const ratio = max > 0 ? scrolled / max : 0;
+        bar.style.transform = `scaleX(${ratio})`;
+      };
+
+      document.addEventListener('scroll', updateProgress, { passive: true });
+      window.addEventListener('resize', updateProgress);
+      updateProgress();
+
+      return () => {
+        document.removeEventListener('scroll', updateProgress);
+        window.removeEventListener('resize', updateProgress);
+      };
+    }
+
+    function initScrollSpy() {
+      const links = Array.from(document.querySelectorAll('[data-toc-link]'));
+      const ignoredHeadingIds = new Set(['footnote-label']);
+      const pairs = links
+        .map((link) => {
+          const slug = link.getAttribute('data-heading-slug');
+          if (!slug || ignoredHeadingIds.has(slug)) return null;
+          const heading = slug ? document.getElementById(slug) : null;
+          return heading ? { link, heading } : null;
+        })
+        .filter(Boolean);
+
+      if (pairs.length === 0) return () => {};
+
+      const setActive = (activeId) => {
+        for (const pair of pairs) {
+          const active = pair.heading.id === activeId;
+          pair.link.classList.toggle('is-active', active);
+          if (active) {
+            pair.link.setAttribute('aria-current', 'true');
+          } else {
+            pair.link.removeAttribute('aria-current');
+          }
+        }
+      };
+
+      let frame = 0;
+      const updateActive = () => {
+        frame = 0;
+        const offset = 112;
+        let current = pairs[0];
+
+        for (const pair of pairs) {
+          if (pair.heading.getBoundingClientRect().top <= offset) {
+            current = pair;
+          } else {
+            break;
+          }
+        }
+
+        setActive(current.heading.id);
+      };
+
+      const scheduleUpdate = () => {
+        if (frame) return;
+        frame = window.requestAnimationFrame(updateActive);
+      };
+
+      document.addEventListener('scroll', scheduleUpdate, { passive: true });
+      window.addEventListener('resize', scheduleUpdate);
+      updateActive();
+
+      return () => {
+        document.removeEventListener('scroll', scheduleUpdate);
+        window.removeEventListener('resize', scheduleUpdate);
+        if (frame) window.cancelAnimationFrame(frame);
+      };
+    }
+
+    function getCodeSource(sourceNode, container) {
+      const copySource = container.querySelector('[data-code]')?.getAttribute('data-code');
+      if (copySource) return copySource.replace(/\u007f/g, '\n').trim();
+
+      const lines = sourceNode.querySelectorAll('.ec-line .code');
+      if (lines.length > 0) {
+        return Array.from(lines)
+          .map((line) => line.textContent ?? '')
+          .join('\n')
+          .trim();
+      }
+
+      return sourceNode.textContent?.trim() ?? '';
+    }
+
+    function collectMermaidBlocks() {
+      const selectors = [
+        '.prose-glass pre[data-language="mermaid"]',
+        '.prose-glass pre[data-language="Mermaid"]',
+        '.prose-glass pre.language-mermaid',
+        '.prose-glass code.language-mermaid',
+        '.prose-glass [data-language="mermaid"]',
+        '.prose-glass [data-language="Mermaid"]',
+        '.prose-glass [class~="language-mermaid"]',
+      ].join(',');
+      const seen = new Set();
+
+      return Array.from(document.querySelectorAll(selectors))
+        .map((node) => {
+          const sourceNode = node.matches('code') ? node : node.querySelector('code') ?? node;
+          const container = node.closest('.expressive-code') ?? node.closest('pre') ?? node;
+          if (!(container instanceof HTMLElement)) return null;
+          if (container.dataset.mermaidProcessed === 'true') return null;
+
+          const source = getCodeSource(sourceNode, container);
+          if (!source || seen.has(container)) return null;
+
+          seen.add(container);
+          return { source, container };
+        })
+        .filter(Boolean);
+    }
+
+    async function renderMermaidBlocks() {
+      const blocks = collectMermaidBlocks();
+      if (blocks.length === 0) return;
+
+      try {
+        const mermaidModule = await import('mermaid');
+        const mermaid = mermaidModule.default;
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme });
+
+        for (const [index, block] of blocks.entries()) {
+          block.container.dataset.mermaidProcessed = 'true';
+          try {
+            const id = `mermaid-${Date.now()}-${index}`;
+            const result = await mermaid.render(id, block.source);
+            const diagram = document.createElement('div');
+            diagram.className = 'mermaid-diagram';
+            diagram.setAttribute('data-mermaid-diagram', '');
+            diagram.innerHTML = result.svg;
+            block.container.replaceWith(diagram);
+          } catch (error) {
+            block.container.dataset.mermaidProcessed = 'false';
+            block.container.dataset.mermaidError = 'true';
+            console.warn('Mermaid render failed:', error);
+          }
+        }
+      } catch (error) {
+        console.warn('Mermaid module failed to load:', error);
+      }
+    }
+
+    function initPostEnhancements() {
+      cleanupPostEnhancements();
+      const cleanups = [initReadingProgress(), initScrollSpy()];
+      cleanupPostEnhancements = () => cleanups.forEach((cleanup) => cleanup());
+      renderMermaidBlocks();
+    }
+
+    document.addEventListener('astro:page-load', initPostEnhancements);
+    initPostEnhancements();
+  </script>
+</BaseLayout>

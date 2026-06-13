@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <text x="600" y="290" text-anchor="middle" font-family="ui-serif, serif"
+        font-size="72" font-weight="bold" fill="white">星之回廊</text>
+  <text x="600" y="360" text-anchor="middle" font-family="ui-sans-serif, sans-serif"
+        font-size="28" fill="white" opacity="0.85">一个记录代码、生活与喜欢的事物的小角落</text>
+  <text x="600" y="540" text-anchor="middle" font-family="ui-sans-serif, sans-serif"
+        font-size="18" fill="white" opacity="0.45">TODO: replace public/images/og/og-default.png · 1200×630</text>
+</svg>

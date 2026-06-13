@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate, postUrl } from '@utils/posts';
+import type { Lang } from '@i18n/ui';
+
+type Post = CollectionEntry<'posts'>;
+
+export interface Props {
+  current: Post;
+  posts: Post[];
+  lang: Lang;
+  title: string;
+}
+
+const { current, posts, lang, title } = Astro.props;
+const seriesName = current.data.series;
+---
+
+{
+  seriesName && posts.length > 0 && (
+    <nav class="glass p-4" aria-label={`${title}: ${seriesName}`}>
+      <h2 class="font-serif text-sm font-semibold text-brand-700 dark:text-brand-300 mb-1">
+        {title}
+      </h2>
+      <p class="text-sm font-semibold mb-3">{seriesName}</p>
+      <ol class="space-y-2">
+        {posts.map((post, index) => {
+          const active = post.slug === current.slug;
+          return (
+            <li>
+              <a
+                href={postUrl(post)}
+                aria-current={active ? 'page' : undefined}
+                class:list={[
+                  'group grid grid-cols-[1.75rem_minmax(0,1fr)] gap-2 rounded-lg p-2 transition-colors',
+                  active
+                    ? 'bg-brand-500/15 text-brand-800 dark:text-brand-100'
+                    : 'hover:bg-brand-100/40 dark:hover:bg-brand-900/30',
+                ]}
+              >
+                <span class:list={[
+                  'mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold',
+                  active
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-brand-100/70 text-brand-700 dark:bg-brand-900/50 dark:text-brand-200',
+                ]}>
+                  {post.data.seriesOrder ?? index + 1}
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-sm font-medium leading-snug line-clamp-2">
+                    {post.data.title}
+                  </span>
+                  <time class="mt-1 block text-xs text-muted" datetime={post.data.pubDate.toISOString()}>
+                    {formatDate(post.data.pubDate, lang)}
+                  </time>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  )
+}

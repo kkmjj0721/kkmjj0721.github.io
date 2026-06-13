@@ -1,0 +1,50 @@
+---
+export interface TocHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+export interface Props {
+  headings: TocHeading[];
+  title: string;
+}
+
+const { headings, title } = Astro.props;
+const generatedFootnoteSlugs = new Set(['footnote-label']);
+const items = headings.filter((heading) => (
+  heading.depth >= 2
+  && heading.depth <= 4
+  && heading.slug
+  && heading.text
+  && !generatedFootnoteSlugs.has(heading.slug)
+));
+---
+
+{
+  items.length > 0 && (
+    <nav class="glass p-4" aria-label={title} data-post-toc>
+      <h2 class="font-serif text-sm font-semibold text-brand-700 dark:text-brand-300 mb-3">
+        {title}
+      </h2>
+      <ol class="space-y-1 text-sm">
+        {items.map((heading) => (
+          <li class:list={[
+            'leading-snug',
+            heading.depth === 3 && 'pl-3',
+            heading.depth === 4 && 'pl-6',
+          ]}>
+            <a
+              href={`#${heading.slug}`}
+              class="block rounded-md px-2 py-1 text-muted hover:text-brand-700 hover:bg-brand-100/40 dark:hover:text-brand-200 dark:hover:bg-brand-900/30 transition-colors"
+              data-toc-link
+              data-heading-slug={heading.slug}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}

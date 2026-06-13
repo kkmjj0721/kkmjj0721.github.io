@@ -1,0 +1,44 @@
+---
+import EmbedFrame from './EmbedFrame.astro';
+
+export interface Props {
+  title: string;
+  user: string;
+  hash: string;
+  defaultTab?: string;
+  themeId?: 'light' | 'dark' | string;
+  height?: number;
+}
+
+const {
+  title,
+  user,
+  hash,
+  defaultTab = 'result',
+  themeId = 'dark',
+  height = 420,
+} = Astro.props;
+const normalizedUser = user.trim();
+const normalizedHash = hash.trim();
+
+if (!normalizedUser || !normalizedHash) {
+  throw new Error('CodePen embed requires non-empty user and hash props.');
+}
+
+const params = new URLSearchParams({
+  'default-tab': defaultTab,
+  'theme-id': themeId,
+});
+
+const src = `https://codepen.io/${encodeURIComponent(normalizedUser)}/embed/${encodeURIComponent(normalizedHash)}?${params.toString()}`;
+---
+
+<EmbedFrame
+  src={src}
+  title={title}
+  allow="clipboard-write"
+  sandbox="allow-scripts"
+  aspectRatio="16 / 10"
+  minHeight={height}
+  scrolling="no"
+/>

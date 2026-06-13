@@ -1,0 +1,30 @@
+---
+import PageLayout from '@layouts/PageLayout.astro';
+import { getPublishedPosts, groupByCategory } from '@utils/posts';
+import { getLangFromUrl, useTranslations, localizedPath } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const posts = await getPublishedPosts(lang);
+const grouped = groupByCategory(posts);
+const cats = Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
+---
+
+<PageLayout title={t('nav.categories')} description="按分类浏览">
+  {cats.length === 0 ? (
+    <p class="text-muted text-center py-12">还没有分类。</p>
+  ) : (
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {cats.map(([cat, list]) => (
+        <a
+          href={localizedPath(`/categories/${cat}/`, lang)}
+          class="glass glass-hover p-5 block"
+        >
+          <div class="text-3xl mb-2">📂</div>
+          <h3 class="font-serif font-semibold text-lg mb-1">{cat}</h3>
+          <p class="text-xs text-muted">{list.length} 篇</p>
+        </a>
+      ))}
+    </div>
+  )}
+</PageLayout>

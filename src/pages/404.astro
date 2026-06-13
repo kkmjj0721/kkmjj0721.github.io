@@ -1,0 +1,30 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations, localizedPath } from '@i18n/ui';
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title="404" noContainer>
+  <section class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="glass-strong p-10 text-center max-w-lg">
+      {/* TODO(image): 替换为你喜欢的 404 插画 (推荐 600x400 png) */}
+      <img
+        src="/images/placeholders/404.placeholder.svg"
+        alt="TODO: 替换 404 插画"
+        data-placeholder="404"
+        class="mx-auto mb-6 max-w-xs opacity-80"
+      />
+      <h1 class="text-4xl font-serif font-bold mb-3 text-brand-700 dark:text-brand-300">
+        {t('404.title')}
+      </h1>
+      <p class="text-muted mb-6">{t('404.subtitle')}</p>
+      <a
+        href={localizedPath('/', lang)}
+        class="inline-block glass-pill px-6 py-3 font-semibold glass-hover"
+      >
+        🏠 {t('404.goHome')}
+      </a>
+    </div>
+  </section>
+</BaseLayout>

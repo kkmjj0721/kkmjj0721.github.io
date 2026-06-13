@@ -1,0 +1,213 @@
+---
+import { Icon } from 'astro-icon/components';
+import { site } from '@data/site';
+import { nav } from '@data/nav';
+import { getLangFromUrl, useTranslations, switchLang, defaultLang, localizedPath } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const enUrl = switchLang(Astro.url, 'en');
+const zhUrl = switchLang(Astro.url, 'zh');
+---
+
+<header class="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[min(95%,1100px)]">
+  <nav class="glass-pill px-3 py-2.5 sm:px-5 sm:py-3 flex items-center gap-1.5 sm:gap-3 min-w-0">
+    <a href={localizedPath('/', lang)} class="min-w-0 truncate font-serif font-bold text-base sm:text-lg text-brand-700 dark:text-brand-200 whitespace-nowrap hover:opacity-80">
+      {site.title[lang]}
+    </a>
+
+    <ul class="hidden lg:flex items-center gap-1 ml-3 text-sm">
+      {nav.slice(0, 8).map((item) => (
+        <li>
+          <a
+            href={localizedPath(item.href, lang)}
+            class="px-3 py-1.5 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors"
+          >
+            {t('nav.' + item.key)}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="flex-1"></div>
+
+    <!-- 搜索 (Phase 6 接入 Pagefind) -->
+    <button
+      type="button"
+      aria-label={t('common.search')}
+      class="shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors"
+      id="search-btn"
+    >
+      <Icon name="mdi:magnify" class="w-5 h-5" />
+    </button>
+
+    <!-- 主色切换 -->
+    <button
+      type="button"
+      aria-label={t('common.pickColor')}
+      class="shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors relative"
+      id="color-btn"
+    >
+      <Icon name="mdi:palette" class="w-5 h-5" />
+    </button>
+
+    <!-- 主题切换 -->
+    <button
+      type="button"
+      aria-label={t('common.toggleTheme')}
+      class="shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors"
+      id="theme-btn"
+    >
+      <Icon name="mdi:weather-sunny" class="w-5 h-5 hidden [data-theme=dark]:inline dark-icon" />
+      <Icon name="mdi:weather-night" class="w-5 h-5 light-icon" />
+    </button>
+
+    <!-- 语言切换 -->
+    <a
+      href={lang === defaultLang ? enUrl : zhUrl}
+      aria-label={t('common.toggleLang')}
+      class="shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors font-semibold text-xs"
+    >
+      {lang === defaultLang ? 'EN' : '中'}
+    </a>
+
+    <!-- 移动端菜单 -->
+    <button
+      type="button"
+      aria-label="Menu"
+      class="lg:hidden shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors"
+      id="mobile-menu-btn"
+    >
+      <Icon name="mdi:menu" class="w-5 h-5" />
+    </button>
+  </nav>
+
+  <!-- 主色拾色器面板 -->
+  <div
+    id="color-panel"
+    class="hidden absolute right-0 mt-3 glass-strong p-4 w-64"
+    role="dialog"
+    aria-label="选择主色"
+  >
+    <p class="text-sm mb-3 font-semibold">主色调</p>
+    <div class="grid grid-cols-6 gap-2">
+      {site.brand.presets.map((p) => (
+        <button
+          type="button"
+          class="w-8 h-8 rounded-full border-2 border-white/40 hover:scale-110 transition-transform shadow-md color-preset"
+          style={`background-color: ${p.value}`}
+          data-color={p.value}
+          title={p.name}
+          aria-label={p.name}
+        ></button>
+      ))}
+    </div>
+    <div class="mt-3 flex items-center gap-2">
+      <label class="text-xs">自定义:</label>
+      <input type="color" id="custom-color" class="w-12 h-8 rounded cursor-pointer" />
+    </div>
+  </div>
+
+  <!-- 移动端菜单面板 -->
+  <div id="mobile-menu" class="hidden lg:hidden mt-3 glass-strong p-4">
+    <ul class="flex flex-col gap-1">
+      {nav.map((item) => (
+        <li>
+          <a
+            href={localizedPath(item.href, lang)}
+            class="block px-3 py-2 rounded-md hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors text-sm"
+          >
+            {t('nav.' + item.key)}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</header>
+
+<!-- 占位高度避免内容被覆盖 -->
+<div class="h-24"></div>
+
+<script>
+  import { applyTheme, applyBrandColor } from '@utils/theme';
+
+  declare global {
+    interface Window {
+      __blogHeaderController?: AbortController;
+      __blogHeaderPageLoadBound?: boolean;
+    }
+  }
+
+  const initHeader = () => {
+    window.__blogHeaderController?.abort();
+    const controller = new AbortController();
+    window.__blogHeaderController = controller;
+    const { signal } = controller;
+
+    // 主题切换
+    document.getElementById('theme-btn')?.addEventListener(
+      'click',
+      () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      },
+      { signal }
+    );
+
+    // 主色面板
+    const colorBtn = document.getElementById('color-btn');
+    const colorPanel = document.getElementById('color-panel');
+    colorBtn?.addEventListener(
+      'click',
+      (e) => {
+        e.stopPropagation();
+        colorPanel?.classList.toggle('hidden');
+      },
+      { signal }
+    );
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (e.target instanceof Node && !colorPanel?.contains(e.target) && e.target !== colorBtn) {
+          colorPanel?.classList.add('hidden');
+        }
+      },
+      { signal }
+    );
+    document.querySelectorAll<HTMLButtonElement>('.color-preset').forEach((btn) => {
+      btn.addEventListener(
+        'click',
+        () => {
+          const color = btn.dataset.color;
+          if (color) applyBrandColor(color);
+        },
+        { signal }
+      );
+    });
+    document.getElementById('custom-color')?.addEventListener(
+      'input',
+      (e) => {
+        const v = (e.target as HTMLInputElement).value;
+        applyBrandColor(v);
+      },
+      { signal }
+    );
+
+    // 移动菜单
+    const mobileMenu = document.getElementById('mobile-menu');
+    document.getElementById('mobile-menu-btn')?.addEventListener(
+      'click',
+      () => {
+        mobileMenu?.classList.toggle('hidden');
+      },
+      { signal }
+    );
+  };
+
+  initHeader();
+
+  if (!window.__blogHeaderPageLoadBound) {
+    document.addEventListener('astro:page-load', initHeader);
+    window.__blogHeaderPageLoadBound = true;
+  }
+</script>

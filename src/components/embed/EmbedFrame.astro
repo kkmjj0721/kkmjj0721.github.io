@@ -1,0 +1,150 @@
+---
+export interface Props {
+  src: string;
+  title: string;
+  allow?: string;
+  sandbox?: string;
+  referrerpolicy?: string;
+  aspectRatio?: string;
+  minHeight?: number;
+  scrolling?: 'auto' | 'yes' | 'no';
+}
+
+const DEFAULT_SANDBOX = 'allow-scripts';
+const DENIED_SANDBOX_TOKENS = new Set([
+  'allow-downloads',
+  'allow-forms',
+  'allow-modals',
+  'allow-pointer-lock',
+  'allow-popups',
+  'allow-popups-to-escape-sandbox',
+  'allow-same-origin',
+  'allow-top-navigation',
+  'allow-top-navigation-by-user-activation',
+  'allow-top-navigation-to-custom-protocols',
+]);
+// Wrapper components may only opt into this narrow sandbox token set.
+const ALLOWED_SANDBOX_TOKENS = new Set(['allow-scripts', 'allow-presentation']);
+const ALLOWED_PERMISSION_TOKENS = new Set([
+  'accelerometer',
+  'autoplay',
+  'clipboard-write',
+  'encrypted-media',
+  'fullscreen',
+  'gyroscope',
+  'picture-in-picture',
+  'web-share',
+]);
+
+function normalizeSrc(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new Error('EmbedFrame requires a non-empty src.');
+  }
+
+  if (trimmed.startsWith('/')) {
+    if (trimmed.startsWith('//')) {
+      throw new Error('EmbedFrame does not allow protocol-relative URLs.');
+    }
+    return trimmed;
+  }
+
+  const url = new URL(trimmed);
+  if (url.protocol !== 'https:') {
+    throw new Error('EmbedFrame only allows https URLs or same-origin relative paths.');
+  }
+  return url.toString();
+}
+
+function normalizeAllow(value = ''): string {
+  const tokens = value
+    .split(';')
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .map((token) => token.split(/\s+/)[0]);
+
+  for (const token of tokens) {
+    if (!ALLOWED_PERMISSION_TOKENS.has(token)) {
+      throw new Error(`EmbedFrame rejected unsupported iframe allow token: ${token}`);
+    }
+  }
+
+  return Array.from(new Set(tokens)).join('; ');
+}
+
+function normalizeSandbox(value = DEFAULT_SANDBOX): string {
+  const tokens = value
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  for (const token of tokens) {
+    if (DENIED_SANDBOX_TOKENS.has(token) || !ALLOWED_SANDBOX_TOKENS.has(token)) {
+      throw new Error(`EmbedFrame rejected unsafe iframe sandbox token: ${token}`);
+    }
+  }
+
+  return Array.from(new Set(tokens)).join(' ');
+}
+
+const {
+  src,
+  title,
+  allow = '',
+  sandbox = DEFAULT_SANDBOX,
+  referrerpolicy = 'strict-origin-when-cross-origin',
+  aspectRatio = '16 / 9',
+  minHeight,
+  scrolling,
+} = Astro.props;
+
+const safeSrc = normalizeSrc(src);
+const safeAllow = normalizeAllow(allow);
+const safeSandbox = normalizeSandbox(sandbox);
+const styleVars = [
+  `--embed-aspect-ratio: ${aspectRatio}`,
+  minHeight ? `--embed-min-height: ${Math.max(240, Math.floor(minHeight))}px` : undefined,
+]
+  .filter(Boolean)
+  .join('; ');
+---
+
+<figure class="embed-frame" style={styleVars}>
+  <iframe
+    src={safeSrc}
+    title={title}
+    loading="lazy"
+    allow={safeAllow}
+    allowfullscreen
+    referrerpolicy={referrerpolicy}
+    sandbox={safeSandbox}
+    scrolling={scrolling}
+  ></iframe>
+  <figcaption>{title}</figcaption>
+</figure>
+
+<style>
+  .embed-frame {
+    width: 100%;
+    margin: 1.5rem 0;
+  }
+
+  .embed-frame iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: var(--embed-aspect-ratio);
+    min-height: var(--embed-min-height, auto);
+    border: 0;
+    border-radius: 0.75rem;
+    background: rgb(var(--color-surface) / 0.6);
+    box-shadow: 0 4px 24px rgb(0 0 0 / 0.12);
+  }
+
+  .embed-frame figcaption {
+    margin-top: 0.5rem;
+    color: rgb(var(--color-muted));
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import PageLayout from '@layouts/PageLayout.astro';
+import PostCard from '@components/post/PostCard.astro';
+import { getPublishedPosts } from '@utils/posts';
+import { getLangFromUrl, useTranslations } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const posts = await getPublishedPosts(lang);
+---
+
+<PageLayout title={t('nav.posts')} description="所有文章">
+  {posts.length === 0 ? (
+    <p class="text-muted text-center py-12">
+      🌱 暂时没有文章。在 <code>src/content/posts/{lang}/</code> 下添加 .md 文件即可。
+    </p>
+  ) : (
+    <div class="flex flex-col gap-5">
+      {posts.map((p) => <PostCard post={p} />)}
+    </div>
+  )}
+</PageLayout>

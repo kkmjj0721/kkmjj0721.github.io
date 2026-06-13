@@ -1,0 +1,37 @@
+---
+import PageLayout from '@layouts/PageLayout.astro';
+import { getPublishedPosts, groupByTag } from '@utils/posts';
+import { getLangFromUrl, useTranslations, localizedPath } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const posts = await getPublishedPosts(lang);
+const grouped = groupByTag(posts);
+const tags = Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
+const maxCount = tags[0]?.[1].length ?? 1;
+
+function sizeFor(count: number): string {
+  const ratio = count / maxCount;
+  if (ratio > 0.75) return 'text-2xl font-bold';
+  if (ratio > 0.5) return 'text-xl font-semibold';
+  if (ratio > 0.25) return 'text-lg';
+  return 'text-sm';
+}
+---
+
+<PageLayout title={t('nav.tags')} description="标签云">
+  {tags.length === 0 ? (
+    <p class="text-muted text-center py-12">还没有标签。</p>
+  ) : (
+    <div class="flex flex-wrap gap-3 justify-center py-6">
+      {tags.map(([tag, list]) => (
+        <a
+          href={localizedPath(`/tags/${tag}/`, lang)}
+          class={`px-3 py-1 rounded-full bg-brand-100/40 dark:bg-brand-900/30 hover:bg-brand-200/60 dark:hover:bg-brand-800/50 transition-all hover:-translate-y-0.5 ${sizeFor(list.length)}`}
+        >
+          #{tag} <span class="text-xs text-muted">({list.length})</span>
+        </a>
+      ))}
+    </div>
+  )}
+</PageLayout>

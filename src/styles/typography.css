@@ -1,0 +1,217 @@
+/**
+ * 文章正文排版
+ * ─────────────────────────────────────────────
+ * TODO(fonts): 字体文件待放置于 public/fonts/ 后取消注释
+ * 当前先用系统字体回退，体验依然完整
+ */
+
+/*
+@font-face {
+  font-family: 'Source Han Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/SourceHanSans-Regular-subset.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Source Han Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/SourceHanSerif-Regular-subset.woff2') format('woff2');
+}
+*/
+
+.prose-glass {
+  max-width: 72ch;
+  line-height: 1.85;
+  color: rgb(var(--color-ink));
+}
+
+.prose-glass h1,
+.prose-glass h2,
+.prose-glass h3,
+.prose-glass h4 {
+  font-family: var(--font-serif, "Source Han Serif", Georgia, serif);
+  font-weight: 600;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  scroll-margin-top: 80px;
+}
+
+.prose-glass h1 {
+  font-size: 2rem;
+}
+.prose-glass h2 {
+  font-size: 1.625rem;
+  border-bottom: 2px solid rgb(var(--color-brand) / 0.3);
+  padding-bottom: 0.3em;
+}
+.prose-glass h3 {
+  font-size: 1.3rem;
+}
+.prose-glass h4 {
+  font-size: 1.15rem;
+}
+
+.prose-glass p {
+  margin: 1em 0;
+}
+
+.prose-glass a {
+  color: rgb(var(--color-brand-600));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+[data-theme="dark"] .prose-glass a {
+  color: rgb(var(--color-brand-300));
+}
+
+.prose-glass strong {
+  font-weight: 600;
+  color: rgb(var(--color-brand-700));
+}
+[data-theme="dark"] .prose-glass strong {
+  color: rgb(var(--color-brand-200));
+}
+
+.prose-glass code:not(pre code) {
+  padding: 0.15em 0.4em;
+  background: rgb(var(--color-brand) / 0.12);
+  border-radius: 0.3em;
+  font-size: 0.92em;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.prose-glass blockquote {
+  margin: 1.5em 0;
+  padding: 0.8em 1.2em;
+  border-left: 4px solid rgb(var(--color-brand) / 0.6);
+  background: rgb(var(--color-brand) / 0.08);
+  border-radius: 0 0.5em 0.5em 0;
+  font-style: italic;
+}
+
+.prose-glass ul,
+.prose-glass ol {
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+.prose-glass li {
+  margin: 0.4em 0;
+}
+.prose-glass ul li::marker {
+  color: rgb(var(--color-brand));
+}
+
+.prose-glass img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75em;
+  margin: 1.5em 0;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.1);
+}
+
+.prose-glass hr {
+  border: none;
+  border-top: 1px dashed rgb(var(--color-muted) / 0.4);
+  margin: 2.5em 0;
+}
+
+.prose-glass table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+.prose-glass th,
+.prose-glass td {
+  padding: 0.6em 1em;
+  border-bottom: 1px solid rgb(var(--color-muted) / 0.2);
+  text-align: left;
+}
+.prose-glass th {
+  background: rgb(var(--color-brand) / 0.08);
+}
+
+.prose-glass .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.25rem;
+}
+
+.prose-glass .mermaid-diagram {
+  margin: 1.5em 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid rgb(var(--color-brand) / 0.18);
+  border-radius: 0.75rem;
+  background: rgb(var(--color-surface) / 0.72);
+}
+
+.prose-glass .mermaid-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+[data-toc-link].is-active {
+  color: rgb(var(--color-brand-700));
+  background: rgb(var(--color-brand) / 0.12);
+  font-weight: 600;
+}
+
+[data-theme="dark"] [data-toc-link].is-active {
+  color: rgb(var(--color-brand-200));
+}
+
+/* 提示框（admonitions）*/
+.admonition {
+  margin: 1.5em 0;
+  padding: 1em 1.2em 1em 3em;
+  border-radius: 0.75em;
+  position: relative;
+  background: rgb(var(--color-surface) / 0.6);
+  backdrop-filter: blur(10px);
+  border-left: 4px solid var(--admonition-color, rgb(var(--color-brand)));
+}
+.admonition::before {
+  content: var(--admonition-icon, "💡");
+  position: absolute;
+  left: 1em;
+  top: 1em;
+  font-size: 1.2em;
+}
+.admonition-title {
+  font-weight: 600;
+  margin-bottom: 0.4em;
+  color: var(--admonition-color, rgb(var(--color-brand)));
+}
+.admonition-tip {
+  --admonition-color: rgb(16 185 129);
+  --admonition-icon: "💡";
+}
+.admonition-note {
+  --admonition-color: rgb(14 165 233);
+  --admonition-icon: "📝";
+}
+.admonition-warning {
+  --admonition-color: rgb(245 158 11);
+  --admonition-icon: "⚠️";
+}
+.admonition-danger {
+  --admonition-color: rgb(239 68 68);
+  --admonition-icon: "⛔";
+}
+.admonition-spoiler {
+  --admonition-color: rgb(168 85 247);
+  --admonition-icon: "🙈";
+}
+.admonition-spoiler > *:not(.admonition-title) {
+  filter: blur(6px);
+  transition: filter 0.3s;
+}
+.admonition-spoiler:hover > *:not(.admonition-title) {
+  filter: none;
+}
