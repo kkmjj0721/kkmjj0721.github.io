@@ -1,8 +1,8 @@
 ---
-import { Icon } from 'astro-icon/components';
-import { site } from '@data/site';
-import { getLangFromUrl, localizedPath, useTranslations } from '@i18n/ui';
-import { formatDate, getPublishedPosts, postUrl } from '@utils/posts';
+import { Icon } from "astro-icon/components";
+import { site } from "@data/site";
+import { getLangFromUrl, localizedPath, useTranslations } from "@i18n/ui";
+import { formatDate, getPublishedPosts, postUrl } from "@utils/posts";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -10,15 +10,30 @@ const t = useTranslations(lang);
 const posts = await getPublishedPosts(lang);
 const latestPosts = posts.slice(0, 4);
 
-const galleryCount = Object.keys(import.meta.glob('../../content/gallery/**/*.{md,mdx}')).length;
-const projectCount = Object.keys(import.meta.glob('../../content/projects/**/*.{md,mdx}')).length;
-const momentCount = Object.keys(import.meta.glob('../../content/moments/**/*.{md,mdx}')).length;
-const animeCount = Object.keys(import.meta.glob('../../content/anime/**/*.{md,mdx}')).length;
-const gameCount = Object.keys(import.meta.glob('../../content/games/**/*.{md,mdx}')).length;
-const bookCount = Object.keys(import.meta.glob('../../content/books/**/*.{md,mdx}')).length;
-const movieCount = Object.keys(import.meta.glob('../../content/movies/**/*.{md,mdx}')).length;
+const galleryCount = Object.keys(
+  import.meta.glob("../../content/gallery/**/*.{md,mdx}"),
+).length;
+const projectCount = Object.keys(
+  import.meta.glob("../../content/projects/**/*.{md,mdx}"),
+).length;
+const momentCount = Object.keys(
+  import.meta.glob("../../content/moments/**/*.{md,mdx}"),
+).length;
+const animeCount = Object.keys(
+  import.meta.glob("../../content/anime/**/*.{md,mdx}"),
+).length;
+const gameCount = Object.keys(
+  import.meta.glob("../../content/games/**/*.{md,mdx}"),
+).length;
+const bookCount = Object.keys(
+  import.meta.glob("../../content/books/**/*.{md,mdx}"),
+).length;
+const movieCount = Object.keys(
+  import.meta.glob("../../content/movies/**/*.{md,mdx}"),
+).length;
 
-const categoryCount = new Set(posts.flatMap((post) => post.data.categories)).size;
+const categoryCount = new Set(posts.flatMap((post) => post.data.categories))
+  .size;
 const tagCount = new Set(posts.flatMap((post) => post.data.tags)).size;
 const startedAtMs = Date.parse(site.startedAt);
 const daysOnline = Number.isFinite(startedAtMs)
@@ -27,192 +42,232 @@ const daysOnline = Number.isFinite(startedAtMs)
 
 const visibleSocial = site.social.filter((item) => item.show);
 const trackingCount = animeCount + gameCount + bookCount + movieCount;
-
-const backgroundPool = [
-  '/images/placeholders/hero-01.placeholder.svg',
-  '/images/placeholders/hero-02.placeholder.svg',
-  '/images/placeholders/hero-03.placeholder.svg',
-];
+const backgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
 
 const stats = [
-  { value: posts.length, label: t('home.dashboard.stat.posts') },
-  { value: categoryCount, label: t('home.dashboard.stat.categories') },
-  { value: tagCount, label: t('home.dashboard.stat.tags') },
-  { value: daysOnline, label: t('home.dashboard.stat.days') },
+  { value: posts.length, label: t("home.dashboard.stat.posts") },
+  { value: categoryCount, label: t("home.dashboard.stat.categories") },
+  { value: tagCount, label: t("home.dashboard.stat.tags") },
+  { value: daysOnline, label: t("home.dashboard.stat.days") },
 ];
 
 const moduleCards = [
   {
-    title: t('nav.gallery'),
-    description: t('home.dashboard.module.gallery'),
-    href: localizedPath('/gallery/', lang),
-    icon: 'mdi:image-multiple-outline',
+    title: t("nav.gallery"),
+    description: t("home.dashboard.module.gallery"),
+    href: localizedPath("/gallery/", lang),
+    icon: "mdi:image-multiple-outline",
     count: galleryCount,
-    accent: 'cyan',
+    accent: "cyan",
   },
   {
-    title: t('nav.projects'),
-    description: t('home.dashboard.module.projects'),
-    href: localizedPath('/projects/', lang),
-    icon: 'mdi:source-branch',
+    title: t("nav.projects"),
+    description: t("home.dashboard.module.projects"),
+    href: localizedPath("/projects/", lang),
+    icon: "mdi:source-branch",
     count: projectCount,
-    accent: 'emerald',
+    accent: "emerald",
   },
   {
-    title: t('nav.tracking'),
-    description: t('home.dashboard.module.tracking'),
-    href: localizedPath('/tracking/anime/', lang),
-    icon: 'mdi:radar',
+    title: t("nav.tracking"),
+    description: t("home.dashboard.module.tracking"),
+    href: localizedPath("/tracking/anime/", lang),
+    icon: "mdi:radar",
     count: trackingCount,
-    accent: 'amber',
+    accent: "amber",
   },
   {
-    title: t('nav.moments'),
-    description: t('home.dashboard.module.moments'),
-    href: localizedPath('/moments/', lang),
-    icon: 'mdi:message-processing-outline',
+    title: t("nav.moments"),
+    description: t("home.dashboard.module.moments"),
+    href: localizedPath("/moments/", lang),
+    icon: "mdi:message-processing-outline",
     count: momentCount,
-    accent: 'rose',
+    accent: "rose",
   },
 ];
 ---
 
 <section class="home-dashboard">
-  <div
-    class="home-dashboard__background"
-    style={`background-image: linear-gradient(135deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.14)), url(${backgroundPool[0]});`}
-    aria-hidden="true"
-  ></div>
+  <div class="home-dashboard__media" aria-hidden="true">
+    <video
+      class="home-dashboard__video"
+      src={backgroundVideo}
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"></video>
+    <div class="home-dashboard__overlay"></div>
+  </div>
 
   <div class="home-dashboard__inner">
-    <div class="home-dashboard__top">
-      <article class="glass-strong profile-panel">
-        <div class="profile-panel__media">
-          <img src={site.author.avatar} alt={site.author.name[lang]} loading="eager" />
+    <section
+      class="home-dashboard__hero"
+      aria-labelledby="home-dashboard-title"
+    >
+      <p class="home-eyebrow">{t("home.dashboard.eyebrow")}</p>
+
+      <div class="profile-orbit">
+        <div class="profile-orbit__avatar">
+          <img
+            src={site.author.avatar}
+            alt={site.author.name[lang]}
+            loading="eager"
+          />
         </div>
+      </div>
 
-        <div class="profile-panel__content">
-          <p class="home-eyebrow">{t('home.dashboard.eyebrow')}</p>
-          <h1>{site.title[lang]}</h1>
-          <p class="profile-panel__subtitle">{site.subtitle[lang]}</p>
-          <p class="profile-panel__bio">{site.author.bio[lang]}</p>
+      <h1 id="home-dashboard-title">{site.title[lang]}</h1>
+      <p class="home-dashboard__subtitle">{site.subtitle[lang]}</p>
+      <p class="home-dashboard__bio">{site.author.bio[lang]}</p>
 
-          <div class="profile-panel__actions" aria-label={t('home.dashboard.actions')}>
-            <a href={localizedPath('/posts/', lang)} class="primary-action">
-              <Icon name="mdi:text-box-multiple-outline" class="h-5 w-5" />
-              <span>{t('home.dashboard.startReading')}</span>
-            </a>
-            <a href={localizedPath('/about/', lang)} class="secondary-action">
-              <Icon name="mdi:account-circle-outline" class="h-5 w-5" />
-              <span>{t('nav.about')}</span>
-            </a>
+      <div
+        class="home-dashboard__actions"
+        aria-label={t("home.dashboard.actions")}
+      >
+        <a href={localizedPath("/posts/", lang)} class="primary-action">
+          <Icon name="mdi:text-box-multiple-outline" class="h-5 w-5" />
+          <span>{t("home.dashboard.startReading")}</span>
+        </a>
+        <a href={localizedPath("/about/", lang)} class="secondary-action">
+          <Icon name="mdi:account-circle-outline" class="h-5 w-5" />
+          <span>{t("nav.about")}</span>
+        </a>
+      </div>
+
+      {
+        visibleSocial.length > 0 && (
+          <div
+            class="home-dashboard__socials"
+            aria-label={t("home.dashboard.socials")}
+          >
+            {visibleSocial.map((item) => (
+              <a href={item.url} title={item.name} aria-label={item.name}>
+                <Icon name={item.icon} class="h-5 w-5" />
+              </a>
+            ))}
           </div>
+        )
+      }
+    </section>
 
-          {visibleSocial.length > 0 && (
-            <div class="profile-panel__socials" aria-label={t('home.dashboard.socials')}>
-              {visibleSocial.map((item) => (
-                <a href={item.url} title={item.name} aria-label={item.name}>
-                  <Icon name={item.icon} class="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      </article>
-
-      <aside class="home-dashboard__side">
-        <form class="glass search-panel" action={localizedPath('/posts/', lang)} method="get">
-          <label for="home-search" class="home-eyebrow">{t('home.dashboard.searchLabel')}</label>
+    <div class="home-dashboard__content">
+      <aside
+        class="home-dashboard__utility"
+        aria-label={t("home.dashboard.stats")}
+      >
+        <form
+          class="glass search-panel"
+          action={localizedPath("/posts/", lang)}
+          method="get"
+        >
+          <label for="home-search" class="home-eyebrow"
+            >{t("home.dashboard.searchLabel")}</label
+          >
           <div class="search-panel__field">
             <Icon name="mdi:magnify" class="h-5 w-5" />
             <input
               id="home-search"
               type="search"
               name="q"
-              placeholder={t('home.dashboard.searchPlaceholder')}
+              placeholder={t("home.dashboard.searchPlaceholder")}
               autocomplete="off"
             />
-            <button type="submit" aria-label={t('common.search')}>
+            <button type="submit" aria-label={t("common.search")}>
               <Icon name="mdi:arrow-right" class="h-5 w-5" />
             </button>
           </div>
         </form>
 
-        <div class="stats-grid" aria-label={t('home.dashboard.stats')}>
-          {stats.map((stat) => (
-            <div class="glass stat-card">
-              <strong>{stat.value}</strong>
-              <span>{stat.label}</span>
-            </div>
-          ))}
+        <div class="stats-grid">
+          {
+            stats.map((stat) => (
+              <div class="glass stat-card">
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            ))
+          }
         </div>
       </aside>
-    </div>
 
-    <div class="home-dashboard__main">
-      <section class="glass-strong latest-panel" aria-labelledby="latest-posts-title">
+      <section
+        class="glass-strong latest-panel"
+        aria-labelledby="latest-posts-title"
+      >
         <div class="section-heading">
           <div>
-            <p class="home-eyebrow">{t('home.dashboard.feed')}</p>
-            <h2 id="latest-posts-title">{t('home.latestPosts')}</h2>
+            <p class="home-eyebrow">{t("home.dashboard.feed")}</p>
+            <h2 id="latest-posts-title">{t("home.latestPosts")}</h2>
           </div>
-          <a href={localizedPath('/posts/', lang)}>
-            <span>{t('home.viewAll')}</span>
+          <a href={localizedPath("/posts/", lang)}>
+            <span>{t("home.viewAll")}</span>
             <Icon name="mdi:arrow-right" class="h-4 w-4" />
           </a>
         </div>
 
-        {latestPosts.length > 0 ? (
-          <div class="latest-list">
-            {latestPosts.map((post) => (
-              <article class="latest-item">
-                <a href={postUrl(post)} class="latest-item__link">
-                  <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
-                  <h3>{post.data.title}</h3>
-                  {post.data.description && <p>{post.data.description}</p>}
-                  <div class="latest-item__meta">
-                    {post.data.categories.slice(0, 2).map((category) => (
-                      <span>{category}</span>
-                    ))}
-                    {post.data.tags.slice(0, 2).map((tag) => (
-                      <span>#{tag}</span>
-                    ))}
-                  </div>
-                </a>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div class="empty-state">
-            <Icon name="mdi:sprout-outline" class="h-8 w-8" />
-            <p>{t('home.dashboard.noPosts')}</p>
-          </div>
-        )}
+        {
+          latestPosts.length > 0 ? (
+            <div class="latest-list">
+              {latestPosts.map((post) => (
+                <article class="latest-item">
+                  <a href={postUrl(post)} class="latest-item__link">
+                    <time datetime={post.data.pubDate.toISOString()}>
+                      {formatDate(post.data.pubDate, lang)}
+                    </time>
+                    <h3>{post.data.title}</h3>
+                    {post.data.description && <p>{post.data.description}</p>}
+                    <div class="latest-item__meta">
+                      {post.data.categories.slice(0, 2).map((category) => (
+                        <span>{category}</span>
+                      ))}
+                      {post.data.tags.slice(0, 2).map((tag) => (
+                        <span>#{tag}</span>
+                      ))}
+                    </div>
+                  </a>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div class="empty-state">
+              <Icon name="mdi:sprout-outline" class="h-8 w-8" />
+              <p>{t("home.dashboard.noPosts")}</p>
+            </div>
+          )
+        }
       </section>
 
       <section class="modules-panel" aria-labelledby="modules-title">
         <div class="section-heading modules-heading">
           <div>
-            <p class="home-eyebrow">{t('home.dashboard.shortcuts')}</p>
-            <h2 id="modules-title">{t('home.dashboard.modules')}</h2>
+            <p class="home-eyebrow">{t("home.dashboard.shortcuts")}</p>
+            <h2 id="modules-title">{t("home.dashboard.modules")}</h2>
           </div>
         </div>
 
         <div class="module-grid">
-          {moduleCards.map((card) => (
-            <a href={card.href} class={`glass module-card module-card--${card.accent}`}>
-              <span class="module-card__icon">
-                <Icon name={card.icon} class="h-6 w-6" />
-              </span>
-              <span class="module-card__body">
-                <span class="module-card__title">{card.title}</span>
-                <span class="module-card__desc">{card.description}</span>
-              </span>
-              <span class="module-card__count">
-                {card.count > 0 ? card.count : t('home.dashboard.placeholder')}
-              </span>
-            </a>
-          ))}
+          {
+            moduleCards.map((card) => (
+              <a
+                href={card.href}
+                class={`glass module-card module-card--${card.accent}`}
+              >
+                <span class="module-card__icon">
+                  <Icon name={card.icon} class="h-6 w-6" />
+                </span>
+                <span class="module-card__body">
+                  <span class="module-card__title">{card.title}</span>
+                  <span class="module-card__desc">{card.description}</span>
+                </span>
+                <span class="module-card__count">
+                  {card.count > 0
+                    ? card.count
+                    : t("home.dashboard.placeholder")}
+                </span>
+              </a>
+            ))
+          }
         </div>
       </section>
     </div>
@@ -221,191 +276,261 @@ const moduleCards = [
 
 <style>
   .home-dashboard {
+    --home-ink: 255 255 255;
+    --home-muted: 226 232 240;
+    --home-soft: 203 213 225;
+    --home-panel: 255 255 255;
+    --home-border: 255 255 255;
+
     position: relative;
     isolation: isolate;
-    min-height: calc(100svh - 6rem);
+    min-height: 100vh;
+    min-height: 100svh;
+    margin-top: -6rem;
     overflow: hidden;
-    padding: 1rem 1rem 4rem;
+    padding: 7.25rem 1rem 4rem;
+    color: rgb(var(--home-ink));
   }
 
-  .home-dashboard__background {
-    position: absolute;
-    inset: -7rem 0 auto;
-    z-index: -2;
-    height: min(66rem, 100%);
-    background-size: cover;
-    background-position: center;
-    opacity: 0.9;
-  }
-
-  .home-dashboard::before,
-  .home-dashboard::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    border-radius: 999px;
-    filter: blur(18px);
+  .home-dashboard__media {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 18% 18%,
+        rgb(var(--color-brand-400) / 0.38),
+        transparent 34rem
+      ),
+      linear-gradient(135deg, rgb(25 32 60), rgb(94 57 116) 46%, rgb(16 24 39));
     pointer-events: none;
   }
 
-  .home-dashboard::before {
-    top: 5%;
-    right: -8rem;
-    width: 20rem;
-    height: 20rem;
-    background: rgb(var(--color-brand-300) / 0.35);
+  .home-dashboard__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.82;
+    filter: saturate(1.08) contrast(1.02);
   }
 
-  .home-dashboard::after {
-    bottom: 4rem;
-    left: -7rem;
-    width: 18rem;
-    height: 18rem;
-    background: rgb(14 165 233 / 0.2);
+  .home-dashboard__overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgb(2 6 23 / 0.74) 0%,
+        rgb(15 23 42 / 0.32) 42%,
+        rgb(2 6 23 / 0.82) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgb(2 6 23 / 0.38),
+        rgb(2 6 23 / 0.08) 50%,
+        rgb(2 6 23 / 0.42)
+      );
   }
 
   .home-dashboard__inner {
-    width: min(1180px, 100%);
+    width: min(1120px, 100%);
     margin: 0 auto;
   }
 
-  .home-dashboard__top,
-  .home-dashboard__main {
+  .home-dashboard__hero {
     display: grid;
-    gap: 1rem;
-  }
-
-  .profile-panel,
-  .search-panel,
-  .stat-card,
-  .latest-panel,
-  .module-card {
-    border-radius: 1rem;
-  }
-
-  .profile-panel {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    justify-items: center;
     min-width: 0;
-    padding: 1.25rem;
+    padding: clamp(1.25rem, 4vw, 3rem) 0 clamp(1.75rem, 5vw, 4rem);
+    text-align: center;
   }
 
-  .profile-panel__media {
-    width: min(7rem, 38vw);
+  .home-dashboard a {
+    color: inherit;
+  }
+
+  .home-eyebrow {
+    margin: 0 0 0.7rem;
+    color: rgb(var(--home-soft) / 0.88);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .profile-orbit {
+    width: clamp(5.5rem, 18vw, 8rem);
     aspect-ratio: 1;
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 0.45);
-    background: rgb(var(--color-surface) / 0.55);
-    box-shadow: 0 16px 45px rgb(15 23 42 / 0.16);
+    margin-bottom: 1rem;
+    border-radius: 1.5rem;
+    padding: 0.35rem;
+    background: linear-gradient(
+      135deg,
+      rgb(255 255 255 / 0.88),
+      rgb(255 255 255 / 0.22)
+    );
+    box-shadow:
+      0 24px 60px rgb(0 0 0 / 0.32),
+      inset 0 1px 0 rgb(255 255 255 / 0.65);
   }
 
-  .profile-panel__media img {
+  .profile-orbit__avatar {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.55);
+    border-radius: 1.15rem;
+    background: rgb(255 255 255 / 0.72);
+  }
+
+  .profile-orbit img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .profile-panel__content {
-    min-width: 0;
-  }
-
-  .home-eyebrow {
-    margin: 0 0 0.5rem;
-    color: rgb(var(--color-brand-700));
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: uppercase;
-  }
-
-  [data-theme='dark'] .home-eyebrow {
-    color: rgb(var(--color-brand-200));
-  }
-
-  .profile-panel h1 {
+  .home-dashboard__hero h1 {
+    max-width: min(100%, 56rem);
     margin: 0;
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
     font-family: var(--font-serif, Georgia, serif);
-    font-size: clamp(2.25rem, 8vw, 4.6rem);
-    line-height: 1;
+    font-size: clamp(2.7rem, 11vw, 6.6rem);
+    line-height: 0.96;
     letter-spacing: 0;
+    text-shadow: 0 18px 50px rgb(0 0 0 / 0.46);
+    overflow-wrap: anywhere;
   }
 
-  .profile-panel__subtitle {
-    max-width: 42rem;
-    margin: 0.8rem 0 0;
-    color: rgb(var(--color-ink) / 0.88);
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    line-height: 1.65;
+  .home-dashboard__subtitle {
+    max-width: 46rem;
+    margin: 1rem 0 0;
+    color: rgb(var(--home-ink) / 0.94);
+    font-size: clamp(1rem, 2.2vw, 1.32rem);
+    font-weight: 700;
+    line-height: 1.7;
+    text-shadow: 0 8px 24px rgb(0 0 0 / 0.42);
   }
 
-  .profile-panel__bio {
-    max-width: 40rem;
-    margin: 0.5rem 0 0;
-    color: rgb(var(--color-muted));
-    line-height: 1.8;
+  .home-dashboard__bio {
+    max-width: 36rem;
+    margin: 0.35rem 0 0;
+    color: rgb(var(--home-muted) / 0.9);
+    line-height: 1.75;
+    text-shadow: 0 8px 22px rgb(0 0 0 / 0.34);
   }
 
-  .profile-panel__actions,
-  .profile-panel__socials {
+  .home-dashboard__actions,
+  .home-dashboard__socials {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.65rem;
-    margin-top: 1rem;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+    max-width: 100%;
   }
 
   .primary-action,
   .secondary-action,
-  .profile-panel__socials a,
+  .home-dashboard__socials a,
   .search-panel button,
   .section-heading a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.5rem;
+    min-height: 2.55rem;
     border-radius: 999px;
-    font-weight: 700;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      transform 0.22s ease,
+      background-color 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+  }
+
+  .primary-action,
+  .secondary-action {
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0 1.1rem;
+    white-space: nowrap;
   }
 
   .primary-action {
-    gap: 0.5rem;
-    padding: 0 1rem;
     color: white;
-    background: rgb(var(--color-brand-600) / 0.9);
-    box-shadow: 0 12px 30px rgb(var(--color-brand-700) / 0.24);
+    background: rgb(var(--color-brand-600) / 0.96);
+    box-shadow: 0 14px 38px rgb(var(--color-brand-700) / 0.38);
   }
 
   .primary-action:hover {
     color: white;
     background: rgb(var(--color-brand-700));
+    transform: translateY(-2px);
   }
 
-  .secondary-action {
-    gap: 0.5rem;
-    padding: 0 1rem;
-    color: rgb(var(--color-ink));
-    background: rgb(var(--color-surface) / 0.48);
+  .secondary-action,
+  .home-dashboard__socials a {
+    color: rgb(var(--home-ink));
+    border: 1px solid rgb(var(--home-border) / 0.28);
+    background: rgb(var(--home-panel) / 0.18);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
 
-  .profile-panel__socials a {
-    width: 2.5rem;
-    color: rgb(var(--color-ink));
-    background: rgb(var(--color-surface) / 0.52);
+  .secondary-action:hover,
+  .home-dashboard__socials a:hover {
+    color: rgb(var(--home-ink));
+    border-color: rgb(var(--home-border) / 0.45);
+    background: rgb(var(--home-panel) / 0.28);
+    transform: translateY(-2px);
   }
 
-  .profile-panel__socials a:hover,
-  .secondary-action:hover {
-    color: rgb(var(--color-brand-700));
-    background: rgb(var(--color-surface) / 0.75);
+  .home-dashboard__socials a {
+    width: 2.55rem;
   }
 
-  .home-dashboard__side {
+  .home-dashboard__content {
     display: grid;
     gap: 1rem;
     min-width: 0;
+  }
+
+  .home-dashboard__utility {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .home-dashboard .glass,
+  .home-dashboard .glass-strong {
+    color: rgb(var(--home-ink));
+    border-color: rgb(var(--home-border) / 0.26);
+    background: rgb(var(--home-panel) / 0.18);
+    box-shadow:
+      0 18px 50px rgb(0 0 0 / 0.2),
+      inset 0 1px 0 rgb(255 255 255 / 0.2);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+  }
+
+  .home-dashboard .glass-strong {
+    background: rgb(var(--home-panel) / 0.24);
+  }
+
+  .search-panel,
+  .stat-card,
+  .latest-panel,
+  .module-card {
+    min-width: 0;
+    border-radius: 1rem;
   }
 
   .search-panel {
@@ -419,9 +544,10 @@ const moduleCards = [
     gap: 0.6rem;
     min-height: 3rem;
     padding: 0.25rem 0.35rem 0.25rem 0.85rem;
+    border: 1px solid rgb(var(--home-border) / 0.16);
     border-radius: 999px;
-    background: rgb(var(--color-surface) / 0.62);
-    color: rgb(var(--color-muted));
+    background: rgb(15 23 42 / 0.25);
+    color: rgb(var(--home-muted));
   }
 
   .search-panel input {
@@ -430,12 +556,12 @@ const moduleCards = [
     border: 0;
     outline: 0;
     background: transparent;
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
     font: inherit;
   }
 
   .search-panel input::placeholder {
-    color: rgb(var(--color-muted) / 0.85);
+    color: rgb(var(--home-muted) / 0.76);
   }
 
   .search-panel button {
@@ -446,6 +572,10 @@ const moduleCards = [
     cursor: pointer;
   }
 
+  .search-panel button:hover {
+    background: rgb(var(--color-brand-700));
+  }
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -453,31 +583,26 @@ const moduleCards = [
   }
 
   .stat-card {
-    min-width: 0;
     padding: 1rem;
   }
 
   .stat-card strong {
     display: block;
-    color: rgb(var(--color-ink));
-    font-size: clamp(1.5rem, 7vw, 2.25rem);
+    color: rgb(var(--home-ink));
+    font-size: clamp(1.55rem, 7vw, 2.35rem);
     line-height: 1;
   }
 
   .stat-card span {
     display: block;
     margin-top: 0.45rem;
-    color: rgb(var(--color-muted));
+    color: rgb(var(--home-muted) / 0.88);
     font-size: 0.82rem;
     line-height: 1.35;
-  }
-
-  .home-dashboard__main {
-    margin-top: 1rem;
+    overflow-wrap: anywhere;
   }
 
   .latest-panel {
-    min-width: 0;
     padding: 1.1rem;
   }
 
@@ -491,7 +616,7 @@ const moduleCards = [
 
   .section-heading h2 {
     margin: 0;
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
     font-family: var(--font-serif, Georgia, serif);
     font-size: clamp(1.35rem, 5vw, 2rem);
     line-height: 1.15;
@@ -503,9 +628,16 @@ const moduleCards = [
     gap: 0.35rem;
     min-height: 2.25rem;
     padding: 0 0.85rem;
-    color: rgb(var(--color-brand-700));
-    background: rgb(var(--color-surface) / 0.5);
+    color: rgb(var(--home-ink));
+    border: 1px solid rgb(var(--home-border) / 0.18);
+    background: rgb(var(--home-panel) / 0.16);
     font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .section-heading a:hover {
+    background: rgb(var(--home-panel) / 0.25);
+    transform: translateY(-1px);
   }
 
   .latest-list {
@@ -520,20 +652,21 @@ const moduleCards = [
   .latest-item__link {
     display: block;
     padding: 0.95rem;
-    border: 1px solid rgb(var(--glass-border) / 0.2);
+    border: 1px solid rgb(var(--home-border) / 0.16);
     border-radius: 0.85rem;
-    color: rgb(var(--color-ink));
-    background: rgb(var(--color-surface) / 0.42);
+    color: rgb(var(--home-ink));
+    background: rgb(15 23 42 / 0.22);
+    text-decoration: none;
   }
 
   .latest-item__link:hover {
-    color: rgb(var(--color-ink));
-    background: rgb(var(--color-surface) / 0.62);
+    color: rgb(var(--home-ink));
+    background: rgb(15 23 42 / 0.34);
   }
 
   .latest-item time {
     display: block;
-    color: rgb(var(--color-muted));
+    color: rgb(var(--home-muted) / 0.78);
     font-size: 0.78rem;
   }
 
@@ -541,9 +674,10 @@ const moduleCards = [
     display: -webkit-box;
     margin: 0.35rem 0 0;
     overflow: hidden;
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
     font-size: clamp(1rem, 4vw, 1.18rem);
     line-height: 1.35;
+    overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -552,7 +686,7 @@ const moduleCards = [
     display: -webkit-box;
     margin: 0.45rem 0 0;
     overflow: hidden;
-    color: rgb(var(--color-muted));
+    color: rgb(var(--home-muted) / 0.86);
     font-size: 0.9rem;
     line-height: 1.6;
     -webkit-box-orient: vertical;
@@ -571,8 +705,8 @@ const moduleCards = [
     overflow-wrap: anywhere;
     border-radius: 999px;
     padding: 0.2rem 0.5rem;
-    color: rgb(var(--color-brand-800));
-    background: rgb(var(--color-brand-100) / 0.55);
+    color: rgb(var(--home-ink));
+    background: rgb(var(--color-brand-600) / 0.38);
     font-size: 0.75rem;
   }
 
@@ -595,14 +729,14 @@ const moduleCards = [
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.85rem;
-    min-width: 0;
     min-height: 6.2rem;
     padding: 1rem;
-    color: rgb(var(--color-ink));
+    text-decoration: none;
   }
 
   .module-card:hover {
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
+    background: rgb(var(--home-panel) / 0.26);
     transform: translateY(-2px);
   }
 
@@ -615,7 +749,7 @@ const moduleCards = [
     border-radius: 0.85rem;
     color: white;
     background: rgb(var(--color-brand-600));
-    box-shadow: 0 12px 28px rgb(var(--color-brand-700) / 0.2);
+    box-shadow: 0 12px 28px rgb(0 0 0 / 0.24);
   }
 
   .module-card--cyan .module-card__icon {
@@ -641,14 +775,15 @@ const moduleCards = [
   }
 
   .module-card__title {
-    color: rgb(var(--color-ink));
+    color: rgb(var(--home-ink));
     font-weight: 800;
+    overflow-wrap: anywhere;
   }
 
   .module-card__desc {
     display: -webkit-box;
     overflow: hidden;
-    color: rgb(var(--color-muted));
+    color: rgb(var(--home-muted) / 0.86);
     font-size: 0.86rem;
     line-height: 1.55;
     -webkit-box-orient: vertical;
@@ -657,12 +792,12 @@ const moduleCards = [
 
   .module-card__count {
     justify-self: end;
-    max-width: 5.2rem;
+    max-width: 5.5rem;
     overflow-wrap: anywhere;
     border-radius: 999px;
     padding: 0.25rem 0.55rem;
-    color: rgb(var(--color-ink));
-    background: rgb(var(--color-surface) / 0.56);
+    color: rgb(var(--home-ink));
+    background: rgb(15 23 42 / 0.24);
     font-size: 0.78rem;
     font-weight: 800;
     text-align: center;
@@ -672,9 +807,10 @@ const moduleCards = [
     display: grid;
     place-items: center;
     min-height: 11rem;
+    border: 1px solid rgb(var(--home-border) / 0.14);
     border-radius: 0.85rem;
-    color: rgb(var(--color-muted));
-    background: rgb(var(--color-surface) / 0.38);
+    color: rgb(var(--home-muted) / 0.88);
+    background: rgb(15 23 42 / 0.2);
     text-align: center;
   }
 
@@ -682,23 +818,13 @@ const moduleCards = [
     margin: 0.65rem 0 0;
   }
 
-  [data-theme='dark'] .home-dashboard__background {
-    opacity: 0.34;
-  }
-
-  [data-theme='dark'] .secondary-action,
-  [data-theme='dark'] .profile-panel__socials a,
-  [data-theme='dark'] .search-panel__field,
-  [data-theme='dark'] .section-heading a,
-  [data-theme='dark'] .latest-item__link,
-  [data-theme='dark'] .module-card__count,
-  [data-theme='dark'] .empty-state {
-    background: rgb(15 23 42 / 0.48);
-  }
-
-  [data-theme='dark'] .latest-item__meta span {
-    color: rgb(var(--color-brand-100));
-    background: rgb(var(--color-brand-900) / 0.45);
+  @supports not (backdrop-filter: blur(22px)) {
+    .home-dashboard .glass,
+    .home-dashboard .glass-strong,
+    .secondary-action,
+    .home-dashboard__socials a {
+      background: rgb(15 23 42 / 0.68);
+    }
   }
 
   @media (min-width: 640px) {
@@ -706,35 +832,22 @@ const moduleCards = [
       padding-inline: 1.5rem;
     }
 
-    .profile-panel {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      padding: 1.5rem;
-    }
-
     .module-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (min-width: 960px) {
+  @media (min-width: 980px) {
     .home-dashboard {
-      padding-top: 1.5rem;
+      padding-top: 7.5rem;
       padding-bottom: 5rem;
     }
 
-    .home-dashboard__top {
-      grid-template-columns: minmax(0, 1.55fr) minmax(19rem, 0.75fr);
-      align-items: stretch;
-    }
-
-    .profile-panel {
-      min-height: 26rem;
-      padding: 2rem;
-    }
-
-    .home-dashboard__main {
-      grid-template-columns: minmax(0, 1.2fr) minmax(22rem, 0.8fr);
+    .home-dashboard__content {
+      grid-template-columns: minmax(17rem, 0.78fr) minmax(0, 1.18fr) minmax(
+          20rem,
+          0.92fr
+        );
       align-items: start;
     }
 
@@ -743,9 +856,19 @@ const moduleCards = [
     }
   }
 
-  @media (max-width: 430px) {
+  @media (max-width: 560px) {
     .home-dashboard {
       padding-inline: 0.75rem;
+      padding-bottom: 3rem;
+    }
+
+    .home-dashboard__actions {
+      width: 100%;
+    }
+
+    .primary-action,
+    .secondary-action {
+      flex: 1 1 10rem;
     }
 
     .section-heading {
@@ -765,6 +888,18 @@ const moduleCards = [
     .module-card__count {
       grid-column: 2;
       justify-self: start;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .primary-action,
+    .secondary-action {
+      white-space: normal;
+      text-align: center;
     }
   }
 </style>
