@@ -30,6 +30,10 @@
 - site_identity_release_2026_06_13: `src/data/site.ts` now uses the canonical site title `奈奈奈奈奈绪の博客`; the prior title `奈奈奈奈奈の博客` was synchronized out of the release surface
 - homepage_navigation_release_2026_06_13: `src/components/home/HomeDashboard.astro`, `src/layouts/BaseLayout.astro`, `src/pages/index.astro`, and `src/styles/global.css` were updated so the home page is locked to a single viewport without vertical scrolling and the profile avatar block was removed from the dashboard hero
 - homepage_navigation_validation_2026_06_13: verification passed with `npm run lint` and `npm run build`; build emitted only known non-blocking warnings for missing content directories, large chunks, and Pagefind Chinese stemming/body index notices
+- homepage_reference_sync_2026_06_13: `src/components/home/HomeDashboard.astro` now follows the XinghuisamaBlogs-inspired layout with transparent glass panels, the existing direct video background, a latest-moments feed, and click-to-play local audio at `/audio/bgm/Departures.mp3`
+- header_reference_sync_2026_06_13: `src/components/layout/Header.astro` now uses a transparent glass pill desktop nav plus a mobile menu over existing local routes from `src/data/nav.ts`
+- audio_asset_release_2026_06_13: `public/audio/bgm/Departures.mp3` is the new source asset and the built artifact is present at `dist/audio/bgm/Departures.mp3`
+- homepage_reference_validation_2026_06_13: verification passed for `node v24.15.0 >=20`, `npm run lint`, `npm run build`, `dist/audio/bgm/Departures.mp3` existence, and preview `200` responses for `/` and `/audio/bgm/Departures.mp3`
 - homepage_theme_surface_release_2026_06_13: `src/components/layout/Header.astro` now uses day/night frosted-glass styling with light mode `bg-white/70 text-slate-950 backdrop-blur-xl` and dark mode `dark:bg-slate-950/60 dark:text-white`; header controls remain limited to navigation and mobile menu
 - homepage_background_theme_release_2026_06_13: `src/components/home/HomeDashboard.astro` now switches the home background by theme, using a day-mode placeholder surface and the existing video background in dark mode via `html[data-theme="dark"]`; the home text/panel tokens were adjusted to keep contrast readable in both themes
 - homepage_theme_surface_mode_switch_2026_06_13: header and home glass surfaces now switch strictly by `html[data-theme]`; light mode uses white glass with dark text, and dark mode uses black glass with light text
@@ -57,6 +61,9 @@
 - pagefind_warning: large chunks and Pagefind zh stemming warnings remain non-blocking
 - homepage_theme_warning_2026_06_13: build still emits existing nonfatal content collection and large chunk warnings
 - image_placeholders: placeholder markers remain allowed by policy for now
+- audio_provenance: `Departures.mp3` provenance/license is not documented yet
+- audio_cleanup_gap: no explicit `astro:before-swap` pause cleanup has been added yet
+- mobile_menu_accessibility: the mobile menu does not yet include a focus trap
 - external_integrations: real Giscus, social, email, and private asset values still require user-provided configuration
 - homepage_background_video_warnings: non-blocking warnings observed for missing content directories, large chunks over 500k, and Pagefind Chinese stemming/body index notices
 - generated_artifacts: `dist/` is present locally but is not the source of truth

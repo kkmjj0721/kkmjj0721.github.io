@@ -1,66 +1,131 @@
 ---
-import { Icon } from 'astro-icon/components';
-import { site } from '@data/site';
-import { nav } from '@data/nav';
-import { getLangFromUrl, useTranslations, localizedPath } from '@i18n/ui';
+import { Icon } from "astro-icon/components";
+import { site } from "@data/site";
+import { nav } from "@data/nav";
+import { getLangFromUrl, useTranslations, localizedPath } from "@i18n/ui";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const title = site.title[lang];
+const [titleBefore, ...titleAfterParts] = title.split("の");
+const titleAfter = titleAfterParts.join("の");
+const navLabel = lang === "zh" ? "主导航" : "Primary navigation";
+const menuLabel = lang === "zh" ? "导航菜单" : "Navigation menu";
+
+const normalizePath = (path: string) => {
+  const clean = path.replace(/\/+$/, "");
+  return clean || "/";
+};
+
+const currentPath = normalizePath(Astro.url.pathname);
+const navItems = nav.map((item) => {
+  const href = localizedPath(item.href, lang);
+  const matchHref = "match" in item ? item.match : item.href;
+  const target = normalizePath(localizedPath(matchHref, lang));
+  const isHome = normalizePath(matchHref) === "/";
+  const isActive = isHome
+    ? currentPath === target
+    : currentPath === target || currentPath.startsWith(`${target}/`);
+
+  return {
+    ...item,
+    href,
+    isActive,
+    label: t(`nav.${item.key}`),
+  };
+});
 ---
 
-<header class="fixed top-0 left-0 right-0 z-40">
-  <nav class="flex min-w-0 items-center gap-3 border-b border-white/80 bg-white/80 px-3 py-2.5 text-slate-950 shadow-sm shadow-slate-950/10 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-black/70 dark:text-slate-50 dark:shadow-black/25 sm:px-5 lg:px-8">
-    <div class="flex min-w-0 flex-1 items-center justify-between gap-3 lg:justify-start lg:gap-5 lg:pl-[32vw] xl:pl-[38vw] 2xl:pl-[41vw]">
-      <a
-        href={localizedPath('/', lang)}
-        class="min-w-0 truncate font-serif text-base font-bold whitespace-nowrap text-slate-950 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white/80 dark:text-slate-50 dark:hover:text-white dark:focus-visible:ring-white/60 dark:focus-visible:ring-offset-black/70 sm:text-lg lg:shrink-0"
-      >
-        {site.title[lang]}
-      </a>
+<header class="fixed inset-x-0 top-0 z-50 px-3 pt-2 sm:px-5" data-site-header>
+  <nav
+    class="mx-auto flex min-h-10 w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-white/55 bg-white/55 px-3 py-2 text-slate-950 shadow-lg shadow-slate-950/10 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-slate-950/55 dark:text-slate-50 dark:shadow-black/25 sm:px-4 lg:px-5"
+    aria-label={navLabel}
+  >
+    <a
+      href={localizedPath("/", lang)}
+      class="min-w-0 truncate font-serif text-base font-black text-slate-950 transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white/70 dark:text-white dark:hover:text-brand-300 dark:focus-visible:ring-brand-300/70 dark:focus-visible:ring-offset-slate-950/80 sm:text-lg"
+    >
+      {
+        titleAfter ? (
+          <>
+            <span>{titleBefore}</span>
+            <span class="mx-1 text-brand-600 dark:text-brand-300">の</span>
+            <span>{titleAfter}</span>
+          </>
+        ) : (
+          title
+        )
+      }
+    </a>
 
-      <ul class="hidden items-center gap-0.5 text-sm lg:flex">
-        {nav.map((item) => (
+    <ul class="hidden items-center gap-1 text-sm font-bold lg:flex">
+      {
+        navItems.map((item) => (
           <li>
             <a
-              href={localizedPath(item.href, lang)}
-              class="rounded-md px-2.5 py-1.5 text-slate-900 transition-colors hover:bg-black/10 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950/35 focus-visible:ring-offset-2 focus-visible:ring-offset-white/80 dark:text-slate-100 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-white/60 dark:focus-visible:ring-offset-black/70"
+              href={item.href}
+              aria-current={item.isActive ? "page" : undefined}
+              class:list={[
+                "relative rounded-full px-2.5 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white/70 dark:focus-visible:ring-brand-300/70 dark:focus-visible:ring-offset-slate-950/80",
+                item.isActive
+                  ? "text-brand-700 dark:text-brand-300"
+                  : "text-slate-700 hover:bg-white/45 hover:text-brand-700 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-brand-300",
+              ]}
             >
-              {t('nav.' + item.key)}
+              <span>{item.label}</span>
+              {item.isActive && (
+                <span
+                  class="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-brand-500 dark:bg-brand-300"
+                  aria-hidden="true"
+                />
+              )}
             </a>
           </li>
-        ))}
-      </ul>
-    </div>
+        ))
+      }
+    </ul>
 
-    <!-- 移动端菜单 -->
     <button
       type="button"
-      aria-label="Menu"
-      class="shrink-0 rounded-full p-1.5 text-slate-950 transition-colors hover:bg-black/10 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white/80 dark:text-slate-50 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-white/60 dark:focus-visible:ring-offset-black/70 sm:p-2 lg:hidden"
       id="mobile-menu-btn"
+      aria-label={menuLabel}
+      aria-controls="mobile-menu"
+      aria-expanded="false"
+      class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/45 text-slate-950 transition-colors hover:bg-white/70 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white/70 dark:border-white/10 dark:bg-white/10 dark:text-slate-50 dark:hover:bg-white/15 dark:hover:text-brand-300 dark:focus-visible:ring-brand-300/70 dark:focus-visible:ring-offset-slate-950/80 lg:hidden"
     >
-      <Icon name="mdi:menu" class="w-5 h-5" />
+      <Icon name="mdi:menu" class="h-5 w-5" data-menu-icon />
+      <Icon name="mdi:close" class="hidden h-5 w-5" data-close-icon />
     </button>
   </nav>
 
-  <!-- 移动端菜单面板 -->
-  <div id="mobile-menu" class="hidden lg:hidden mx-3 mt-2 rounded-xl border border-white/80 bg-white/85 p-4 text-slate-950 shadow-lg shadow-slate-950/10 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-black/75 dark:text-slate-50 dark:shadow-black/25">
-    <ul class="flex flex-col gap-1">
-      {nav.map((item) => (
-        <li>
-          <a
-            href={localizedPath(item.href, lang)}
-            class="block rounded-md px-3 py-2 text-sm text-slate-900 transition-colors hover:bg-black/10 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950/35 focus-visible:ring-offset-2 focus-visible:ring-offset-white/85 dark:text-slate-100 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-white/60 dark:focus-visible:ring-offset-black/75"
-          >
-            {t('nav.' + item.key)}
-          </a>
-        </li>
-      ))}
+  <div
+    id="mobile-menu"
+    class="mx-auto mt-2 hidden max-h-[calc(100svh-5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/55 bg-white/70 p-2 text-slate-950 shadow-xl shadow-slate-950/10 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-50 dark:shadow-black/30 lg:hidden"
+  >
+    <ul class="grid grid-cols-2 gap-1.5">
+      {
+        navItems.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={item.isActive ? "page" : undefined}
+              class:list={[
+                "flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 dark:focus-visible:ring-brand-300/70",
+                item.isActive
+                  ? "bg-brand-500 text-white shadow-sm shadow-brand-500/25 dark:bg-brand-400 dark:text-slate-950"
+                  : "bg-white/45 text-slate-800 hover:bg-white/75 hover:text-brand-700 dark:bg-white/10 dark:text-slate-100 dark:hover:bg-white/15 dark:hover:text-brand-300",
+              ]}
+            >
+              <Icon name={item.icon} class="h-4 w-4 shrink-0" />
+              <span class="min-w-0 truncate">{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
     </ul>
   </div>
 </header>
 
-<!-- 占位高度避免内容被覆盖 -->
 <div class="h-12"></div>
 
 <script>
@@ -77,21 +142,74 @@ const t = useTranslations(lang);
     window.__blogHeaderController = controller;
     const { signal } = controller;
 
-    // 移动菜单
-    const mobileMenu = document.getElementById('mobile-menu');
-    document.getElementById('mobile-menu-btn')?.addEventListener(
-      'click',
+    const header = document.querySelector<HTMLElement>("[data-site-header]");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const mobileMenuButton = document.getElementById(
+      "mobile-menu-btn",
+    ) as HTMLButtonElement | null;
+    const menuIcon = document.querySelector<HTMLElement>("[data-menu-icon]");
+    const closeIcon = document.querySelector<HTMLElement>("[data-close-icon]");
+
+    if (!mobileMenu || !mobileMenuButton) return;
+
+    const setMobileMenuOpen = (isOpen: boolean) => {
+      mobileMenu.classList.toggle("hidden", !isOpen);
+      mobileMenuButton.setAttribute("aria-expanded", String(isOpen));
+      menuIcon?.classList.toggle("hidden", isOpen);
+      closeIcon?.classList.toggle("hidden", !isOpen);
+    };
+
+    setMobileMenuOpen(false);
+
+    mobileMenuButton.addEventListener(
+      "click",
       () => {
-        mobileMenu?.classList.toggle('hidden');
+        setMobileMenuOpen(mobileMenu.classList.contains("hidden"));
       },
-      { signal }
+      { signal },
+    );
+
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setMobileMenuOpen(false), {
+        signal,
+      });
+    });
+
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (event.target instanceof Node && !header?.contains(event.target)) {
+          setMobileMenuOpen(false);
+        }
+      },
+      { signal },
+    );
+
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape") {
+          setMobileMenuOpen(false);
+        }
+      },
+      { signal },
+    );
+
+    window.addEventListener(
+      "resize",
+      () => {
+        if (window.matchMedia("(min-width: 1024px)").matches) {
+          setMobileMenuOpen(false);
+        }
+      },
+      { signal },
     );
   };
 
   initHeader();
 
   if (!window.__blogHeaderPageLoadBound) {
-    document.addEventListener('astro:page-load', initHeader);
+    document.addEventListener("astro:page-load", initHeader);
     window.__blogHeaderPageLoadBound = true;
   }
 </script>

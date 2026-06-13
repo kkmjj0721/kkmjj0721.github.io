@@ -1,4 +1,5 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import SearchModal from "@components/search/SearchModal.astro";
 import { site } from "@data/site";
@@ -9,7 +10,12 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 const posts = await getPublishedPosts(lang);
-const latestPosts = posts.slice(0, 4);
+const latestPosts = posts.slice(0, 5);
+const latestMoments = (
+  await getCollection("moments", ({ data }) => data.visibility === "public")
+)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 4);
 
 const galleryCount = Object.keys(
   import.meta.glob("../../content/gallery/**/*.{md,mdx}"),
@@ -45,12 +51,92 @@ const visibleSocial = site.social.filter((item) => item.show);
 const trackingCount = animeCount + gameCount + bookCount + movieCount;
 const lightBackgroundVideo = "/images/backgrounds/tomori.mp4";
 const darkBackgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
+const musicSrc = "/audio/bgm/Departures.mp3";
+
+const copy = {
+  zh: {
+    profileKicker: "个人空间",
+    online: "在线记录中",
+    searchKicker: "SearchBar",
+    playerKicker: "CloudPlayer",
+    playerTitle: "Departures",
+    playerArtist: "点击播放背景音乐",
+    playerPlay: "播放音乐",
+    playerPause: "暂停音乐",
+    lyricIdle: "让音乐从一次点击开始。",
+    lyricPlaying: "正在播放 Departures，背景与卡片保持轻盈透明。",
+    lyricError: "浏览器暂时无法播放这首音乐。",
+    postsKicker: "LatestPostsCarousel",
+    chatterKicker: "LatestChatterCarousel",
+    chatterTitle: "最近说说",
+    chatterEmptyTitle: "说说待更新",
+    chatterEmptyText: "短动态入口已经准备好，新的碎片想法会出现在这里。",
+    themeKicker: "ThemeToggleBlock",
+    themeTitle: "界面偏好",
+    themeLight: "亮色",
+    themeDark: "暗色",
+    themeAuto: "自动",
+    colorTitle: "主色",
+    dashboardKicker: "SiteDashboard",
+    dashboardTitle: "站点概览",
+    modulesKicker: "快捷入口",
+    readPost: "阅读文章",
+    openMoments: "进入说说",
+    waiting: "待整理",
+  },
+  en: {
+    profileKicker: "Personal space",
+    online: "Logging online",
+    searchKicker: "SearchBar",
+    playerKicker: "CloudPlayer",
+    playerTitle: "Departures",
+    playerArtist: "Click to play background music",
+    playerPlay: "Play music",
+    playerPause: "Pause music",
+    lyricIdle: "Music starts with one click.",
+    lyricPlaying: "Departures is playing while the glass cards stay light.",
+    lyricError: "The browser could not play this track.",
+    postsKicker: "LatestPostsCarousel",
+    chatterKicker: "LatestChatterCarousel",
+    chatterTitle: "Recent chatter",
+    chatterEmptyTitle: "Chatter is waiting",
+    chatterEmptyText: "Short updates are ready to appear here.",
+    themeKicker: "ThemeToggleBlock",
+    themeTitle: "Interface",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeAuto: "Auto",
+    colorTitle: "Accent",
+    dashboardKicker: "SiteDashboard",
+    dashboardTitle: "Site overview",
+    modulesKicker: "Shortcuts",
+    readPost: "Read post",
+    openMoments: "Open moments",
+    waiting: "Soon",
+  },
+}[lang];
 
 const stats = [
-  { value: posts.length, label: t("home.dashboard.stat.posts") },
-  { value: categoryCount, label: t("home.dashboard.stat.categories") },
-  { value: tagCount, label: t("home.dashboard.stat.tags") },
-  { value: daysOnline, label: t("home.dashboard.stat.days") },
+  {
+    value: posts.length,
+    label: t("home.dashboard.stat.posts"),
+    icon: "mdi:text-box-multiple-outline",
+  },
+  {
+    value: categoryCount,
+    label: t("home.dashboard.stat.categories"),
+    icon: "mdi:folder-multiple-outline",
+  },
+  {
+    value: tagCount,
+    label: t("home.dashboard.stat.tags"),
+    icon: "mdi:tag-multiple-outline",
+  },
+  {
+    value: daysOnline,
+    label: t("home.dashboard.stat.days"),
+    icon: "mdi:calendar-clock",
+  },
 ];
 
 const moduleCards = [
@@ -87,9 +173,30 @@ const moduleCards = [
     accent: "rose",
   },
 ];
+
+const dashboardItems = [
+  ...stats,
+  {
+    value: galleryCount + projectCount,
+    label: `${t("nav.gallery")} / ${t("nav.projects")}`,
+    icon: "mdi:view-dashboard-outline",
+  },
+  {
+    value: trackingCount,
+    label: t("nav.tracking"),
+    icon: "mdi:cards-heart-outline",
+  },
+];
 ---
 
-<section class="home-dashboard">
+<section
+  class="home-dashboard"
+  data-lyric-idle={copy.lyricIdle}
+  data-lyric-playing={copy.lyricPlaying}
+  data-lyric-error={copy.lyricError}
+  data-player-play-label={copy.playerPlay}
+  data-player-pause-label={copy.playerPause}
+>
   <div class="home-dashboard__media" aria-hidden="true">
     <div class="home-dashboard__placeholder"></div>
     <video
@@ -106,161 +213,328 @@ const moduleCards = [
   </div>
 
   <div class="home-dashboard__inner">
-    <section
-      class="home-dashboard__hero"
-      aria-labelledby="home-dashboard-title"
-    >
-      <h1 id="home-dashboard-title">{site.title[lang]}</h1>
-      <p class="home-dashboard__subtitle">{site.subtitle[lang]}</p>
-      <p class="home-dashboard__bio">{site.author.bio[lang]}</p>
-
-      <div
-        class="home-dashboard__actions"
-        aria-label={t("home.dashboard.actions")}
-      >
-        <a href={localizedPath("/posts/", lang)} class="primary-action">
-          <Icon name="mdi:text-box-multiple-outline" class="h-5 w-5" />
-          <span>{t("home.dashboard.startReading")}</span>
-        </a>
-        <a href={localizedPath("/about/", lang)} class="secondary-action">
-          <Icon name="mdi:account-circle-outline" class="h-5 w-5" />
-          <span>{t("nav.about")}</span>
-        </a>
-      </div>
-
-      {
-        visibleSocial.length > 0 && (
-          <div
-            class="home-dashboard__socials"
-            aria-label={t("home.dashboard.socials")}
-          >
-            {visibleSocial.map((item) => (
-              <a href={item.url} title={item.name} aria-label={item.name}>
-                <Icon name={item.icon} class="h-5 w-5" />
-              </a>
-            ))}
+    <div class="home-dashboard__layout">
+      <aside class="home-stack home-stack--profile">
+        <article class="home-glass profile-card" aria-labelledby="home-title">
+          <div class="profile-card__topline">
+            <span>{copy.profileKicker}</span>
+            <span class="profile-card__status">
+              <span aria-hidden="true"></span>
+              {copy.online}
+            </span>
           </div>
-        )
-      }
-    </section>
 
-    <div class="home-dashboard__content">
-      <aside
-        class="home-dashboard__utility"
-        aria-label={t("home.dashboard.stats")}
-      >
-        <div class="glass search-panel">
-          <p id="home-search-label" class="home-eyebrow">
-            {t("home.dashboard.searchLabel")}
-          </p>
+          <div class="profile-card__identity">
+            <img
+              src={site.author.avatar}
+              alt={site.author.name[lang]}
+              loading="eager"
+              class="profile-card__avatar"
+            />
+            <div>
+              <h1 id="home-title">{site.title[lang]}</h1>
+              <p>{site.author.nameAlias[lang]}</p>
+            </div>
+          </div>
+
+          <p class="profile-card__subtitle">{site.subtitle[lang]}</p>
+          <p class="profile-card__bio">{site.author.bio[lang]}</p>
+
+          {
+            visibleSocial.length > 0 && (
+              <div
+                class="profile-card__socials"
+                aria-label={t("home.dashboard.socials")}
+              >
+                {visibleSocial.map((item) => (
+                  <a href={item.url} title={item.name} aria-label={item.name}>
+                    <Icon name={item.icon} class="h-5 w-5" />
+                  </a>
+                ))}
+              </div>
+            )
+          }
+
+          <div
+            class="profile-card__actions"
+            aria-label={t("home.dashboard.actions")}
+          >
+            <a href={localizedPath("/posts/", lang)} class="home-action">
+              <Icon name="mdi:text-box-multiple-outline" class="h-5 w-5" />
+              <span>{t("home.dashboard.startReading")}</span>
+            </a>
+            <a
+              href={localizedPath("/about/", lang)}
+              class="home-action home-action--quiet"
+            >
+              <Icon name="mdi:account-circle-outline" class="h-5 w-5" />
+              <span>{t("nav.about")}</span>
+            </a>
+          </div>
+        </article>
+
+        <section
+          class="home-glass search-card"
+          aria-labelledby="home-search-label"
+        >
+          <p class="home-kicker" id="home-search-label">{copy.searchKicker}</p>
           <button
-            class="search-panel__field"
+            class="search-card__field"
             type="button"
             data-search-open
-            aria-labelledby="home-search-label"
             aria-controls="site-search-modal"
           >
             <Icon name="mdi:magnify" class="h-5 w-5" />
-            <span class="search-panel__placeholder">
-              {t("home.dashboard.searchPlaceholder")}
-            </span>
-            <span class="search-panel__action" aria-hidden="true">
-              <Icon name="mdi:arrow-right" class="h-5 w-5" />
-            </span>
+            <span>{t("home.dashboard.searchPlaceholder")}</span>
+            <Icon name="mdi:arrow-right" class="h-5 w-5" />
           </button>
-        </div>
+        </section>
 
-        <div class="stats-grid">
-          {
-            stats.map((stat) => (
-              <div class="glass stat-card">
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </div>
-            ))
-          }
-        </div>
+        <section
+          class="home-glass player-card"
+          data-home-player
+          aria-labelledby="home-player-title"
+        >
+          <audio data-home-audio src={musicSrc} preload="metadata"></audio>
+          <div class="panel-heading panel-heading--compact">
+            <div>
+              <p class="home-kicker">{copy.playerKicker}</p>
+              <h2 id="home-player-title">{copy.playerTitle}</h2>
+            </div>
+            <button
+              type="button"
+              class="player-toggle"
+              data-home-audio-toggle
+              aria-label={copy.playerPlay}
+              aria-pressed="false"
+            >
+              <Icon
+                name="mdi:play"
+                class="h-6 w-6 player-toggle__play"
+                aria-hidden="true"
+              />
+              <Icon
+                name="mdi:pause"
+                class="h-6 w-6 player-toggle__pause"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+          <div class="player-card__track">
+            <span class="player-card__disc" aria-hidden="true">
+              <Icon name="mdi:music" class="h-5 w-5" />
+            </span>
+            <div>
+              <strong>{copy.playerTitle}</strong>
+              <span>{copy.playerArtist}</span>
+            </div>
+          </div>
+
+          <div
+            class="player-progress"
+            data-home-audio-progress
+            aria-hidden="true"
+          >
+            <span></span>
+          </div>
+
+          <div class="lyric-bar">
+            <Icon name="mdi:music-note-outline" class="h-4 w-4" />
+            <p data-home-lyric>{copy.lyricIdle}</p>
+          </div>
+        </section>
       </aside>
 
-      <section
-        class="glass-strong latest-panel"
-        aria-labelledby="latest-posts-title"
-      >
-        <div class="section-heading">
-          <div>
-            <p class="home-eyebrow">{t("home.dashboard.feed")}</p>
-            <h2 id="latest-posts-title">{t("home.latestPosts")}</h2>
+      <div class="home-stack home-stack--feed">
+        <section
+          class="home-glass posts-carousel"
+          aria-labelledby="latest-posts-title"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="home-kicker">{copy.postsKicker}</p>
+              <h2 id="latest-posts-title">{t("home.latestPosts")}</h2>
+            </div>
+            <a href={localizedPath("/posts/", lang)} class="panel-link">
+              <span>{t("home.viewAll")}</span>
+              <Icon name="mdi:arrow-right" class="h-4 w-4" />
+            </a>
           </div>
-          <a href={localizedPath("/posts/", lang)}>
-            <span>{t("home.viewAll")}</span>
-            <Icon name="mdi:arrow-right" class="h-4 w-4" />
-          </a>
-        </div>
 
-        {
-          latestPosts.length > 0 ? (
-            <div class="latest-list">
-              {latestPosts.map((post) => (
-                <article class="latest-item">
-                  <a href={postUrl(post)} class="latest-item__link">
-                    <time datetime={post.data.pubDate.toISOString()}>
-                      {formatDate(post.data.pubDate, lang)}
+          {
+            latestPosts.length > 0 ? (
+              <div class="rail" tabindex="0" aria-label={t("home.latestPosts")}>
+                {latestPosts.map((post) => (
+                  <article class="post-card">
+                    <a
+                      href={postUrl(post)}
+                      aria-label={`${copy.readPost}: ${post.data.title}`}
+                    >
+                      <time datetime={post.data.pubDate.toISOString()}>
+                        {formatDate(post.data.pubDate, lang)}
+                      </time>
+                      <h3>{post.data.title}</h3>
+                      {post.data.description && <p>{post.data.description}</p>}
+                      <span class="post-card__footer">
+                        <span>{post.data.categories[0] ?? t("nav.posts")}</span>
+                        <Icon name="mdi:chevron-right" class="h-5 w-5" />
+                      </span>
+                    </a>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div class="empty-state">
+                <Icon name="mdi:sprout-outline" class="h-8 w-8" />
+                <p>{t("home.dashboard.noPosts")}</p>
+              </div>
+            )
+          }
+        </section>
+
+        <section
+          class="home-glass chatter-carousel"
+          aria-labelledby="latest-chatter-title"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="home-kicker">{copy.chatterKicker}</p>
+              <h2 id="latest-chatter-title">{copy.chatterTitle}</h2>
+            </div>
+            <a href={localizedPath("/moments/", lang)} class="panel-link">
+              <span>{copy.openMoments}</span>
+              <Icon name="mdi:arrow-right" class="h-4 w-4" />
+            </a>
+          </div>
+
+          <div class="chatter-grid">
+            {
+              latestMoments.length > 0 ? (
+                latestMoments.map((moment) => (
+                  <a
+                    href={localizedPath("/moments/", lang)}
+                    class="chatter-card"
+                  >
+                    <time datetime={moment.data.date.toISOString()}>
+                      {formatDate(moment.data.date, lang)}
                     </time>
-                    <h3>{post.data.title}</h3>
-                    {post.data.description && <p>{post.data.description}</p>}
-                    <div class="latest-item__meta">
-                      {post.data.categories.slice(0, 2).map((category) => (
-                        <span>{category}</span>
-                      ))}
-                      {post.data.tags.slice(0, 2).map((tag) => (
-                        <span>#{tag}</span>
-                      ))}
-                    </div>
+                    <h3>{moment.data.mood ?? t("nav.moments")}</h3>
+                    <p>
+                      {moment.data.location
+                        ? `${moment.data.location} · ${moment.data.images.length} images`
+                        : moment.data.images.length > 0
+                          ? `${moment.data.images.length} images`
+                          : t("home.dashboard.module.moments")}
+                    </p>
                   </a>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div class="empty-state">
-              <Icon name="mdi:sprout-outline" class="h-8 w-8" />
-              <p>{t("home.dashboard.noPosts")}</p>
-            </div>
-          )
-        }
-      </section>
-
-      <section class="modules-panel" aria-labelledby="modules-title">
-        <div class="section-heading modules-heading">
-          <div>
-            <p class="home-eyebrow">{t("home.dashboard.shortcuts")}</p>
-            <h2 id="modules-title">{t("home.dashboard.modules")}</h2>
+                ))
+              ) : (
+                <a
+                  href={localizedPath("/moments/", lang)}
+                  class="chatter-card chatter-card--empty"
+                >
+                  <time>{copy.waiting}</time>
+                  <h3>{copy.chatterEmptyTitle}</h3>
+                  <p>{copy.chatterEmptyText}</p>
+                </a>
+              )
+            }
           </div>
-        </div>
+        </section>
 
-        <div class="module-grid">
+        <section class="module-strip" aria-label={copy.modulesKicker}>
           {
             moduleCards.map((card) => (
               <a
                 href={card.href}
-                class={`glass module-card module-card--${card.accent}`}
+                class={`home-glass module-chip module-chip--${card.accent}`}
               >
-                <span class="module-card__icon">
-                  <Icon name={card.icon} class="h-6 w-6" />
+                <span class="module-chip__icon">
+                  <Icon name={card.icon} class="h-5 w-5" />
                 </span>
-                <span class="module-card__body">
-                  <span class="module-card__title">{card.title}</span>
-                  <span class="module-card__desc">{card.description}</span>
+                <span class="module-chip__body">
+                  <span>{card.title}</span>
+                  <small>{card.description}</small>
                 </span>
-                <span class="module-card__count">
+                <strong>
                   {card.count > 0
                     ? card.count
                     : t("home.dashboard.placeholder")}
-                </span>
+                </strong>
               </a>
             ))
           }
-        </div>
-      </section>
+        </section>
+      </div>
+
+      <aside class="home-stack home-stack--dashboard">
+        <section
+          class="home-glass theme-card"
+          aria-labelledby="home-theme-title"
+        >
+          <p class="home-kicker">{copy.themeKicker}</p>
+          <div class="panel-heading panel-heading--compact">
+            <h2 id="home-theme-title">{copy.themeTitle}</h2>
+            <Icon name="mdi:theme-light-dark" class="h-5 w-5" />
+          </div>
+
+          <div class="theme-card__modes" aria-label={copy.themeTitle}>
+            <button type="button" data-home-theme-mode="light">
+              <Icon name="mdi:white-balance-sunny" class="h-4 w-4" />
+              <span>{copy.themeLight}</span>
+            </button>
+            <button type="button" data-home-theme-mode="dark">
+              <Icon name="mdi:weather-night" class="h-4 w-4" />
+              <span>{copy.themeDark}</span>
+            </button>
+            <button type="button" data-home-theme-mode="auto">
+              <Icon name="mdi:theme-light-dark" class="h-4 w-4" />
+              <span>{copy.themeAuto}</span>
+            </button>
+          </div>
+
+          <div class="theme-card__colors" aria-label={copy.colorTitle}>
+            <span>{copy.colorTitle}</span>
+            <div>
+              {
+                site.brand.presets.map((preset) => (
+                  <button
+                    type="button"
+                    data-home-brand-color={preset.value}
+                    aria-label={preset.name}
+                    title={preset.name}
+                    style={`--swatch: ${preset.value}`}
+                  />
+                ))
+              }
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-glass site-dashboard"
+          aria-labelledby="site-dashboard-title"
+        >
+          <p class="home-kicker">{copy.dashboardKicker}</p>
+          <div class="panel-heading panel-heading--compact">
+            <h2 id="site-dashboard-title">{copy.dashboardTitle}</h2>
+            <Icon name="mdi:chart-box-outline" class="h-5 w-5" />
+          </div>
+
+          <div class="site-dashboard__grid">
+            {
+              dashboardItems.map((item) => (
+                <div class="dashboard-stat">
+                  <Icon name={item.icon} class="h-5 w-5" />
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))
+            }
+          </div>
+        </section>
+      </aside>
     </div>
   </div>
 </section>
@@ -270,92 +544,266 @@ const moduleCards = [
 <script>
   declare global {
     interface Window {
-      __homeDashboardVideoController?: AbortController;
+      __homeDashboardController?: AbortController;
       __homeDashboardVideoObserver?: MutationObserver;
-      __homeDashboardVideoPageLoadBound?: boolean;
+      __homeDashboardPageLoadBound?: boolean;
     }
   }
 
-  const initHomeDashboardVideo = () => {
-    window.__homeDashboardVideoController?.abort();
+  const initHomeDashboard = () => {
+    window.__homeDashboardController?.abort();
     window.__homeDashboardVideoObserver?.disconnect();
 
+    const controller = new AbortController();
+    window.__homeDashboardController = controller;
+    const { signal } = controller;
+
+    const dashboard = document.querySelector<HTMLElement>(".home-dashboard");
+    const root = document.documentElement;
     const video = document.querySelector<HTMLVideoElement>(
       "[data-home-background-video]",
     );
 
-    if (!video) {
-      return;
+    if (video) {
+      const removeVideoSource = () => {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
+
+      const syncVideoSource = () => {
+        const theme =
+          root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        const nextSrc =
+          theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
+
+        video.classList.toggle("home-dashboard__video--dark", theme === "dark");
+        video.classList.toggle(
+          "home-dashboard__video--light",
+          theme !== "dark",
+        );
+
+        if (!nextSrc) {
+          video.classList.remove("is-video-ready");
+          removeVideoSource();
+          return;
+        }
+
+        if (video.getAttribute("src") !== nextSrc) {
+          video.classList.remove("is-video-ready");
+          removeVideoSource();
+          video.setAttribute("src", nextSrc);
+          video.load();
+        }
+
+        void video.play().catch(() => {
+          video.classList.remove("is-video-ready");
+        });
+      };
+
+      video.addEventListener(
+        "loadeddata",
+        () => {
+          video.classList.add("is-video-ready");
+        },
+        { signal },
+      );
+
+      video.addEventListener(
+        "error",
+        () => {
+          video.classList.remove("is-video-ready");
+        },
+        { signal },
+      );
+
+      const observer = new MutationObserver(syncVideoSource);
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+      window.__homeDashboardVideoObserver = observer;
+
+      syncVideoSource();
     }
 
-    const controller = new AbortController();
-    window.__homeDashboardVideoController = controller;
-    const { signal } = controller;
-    const root = document.documentElement;
+    const player = document.querySelector<HTMLElement>("[data-home-player]");
+    const audio = document.querySelector<HTMLAudioElement>("[data-home-audio]");
+    const toggle = document.querySelector<HTMLButtonElement>(
+      "[data-home-audio-toggle]",
+    );
+    const progress = document.querySelector<HTMLElement>(
+      "[data-home-audio-progress]",
+    );
+    const lyric = document.querySelector<HTMLElement>("[data-home-lyric]");
+    const lyricIdle = dashboard?.dataset.lyricIdle ?? "";
+    const lyricPlaying = dashboard?.dataset.lyricPlaying ?? "";
+    const lyricError = dashboard?.dataset.lyricError ?? "";
+    const playerPlayLabel = dashboard?.dataset.playerPlayLabel ?? "";
+    const playerPauseLabel = dashboard?.dataset.playerPauseLabel ?? "";
 
-    const removeVideoSource = () => {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
+    const updatePlayerState = () => {
+      const isPlaying = Boolean(audio && !audio.paused);
+      player?.classList.toggle("is-playing", isPlaying);
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", String(isPlaying));
+        toggle.setAttribute(
+          "aria-label",
+          isPlaying ? playerPauseLabel : playerPlayLabel,
+        );
+      }
+      if (lyric) {
+        lyric.textContent = isPlaying ? lyricPlaying : lyricIdle;
+      }
     };
 
-    const syncVideoSource = () => {
-      const theme = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
-      const nextSrc =
-        theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
-
-      video.classList.toggle("home-dashboard__video--dark", theme === "dark");
-      video.classList.toggle("home-dashboard__video--light", theme !== "dark");
-
-      if (!nextSrc) {
-        video.classList.remove("is-video-ready");
-        removeVideoSource();
+    const updateProgress = () => {
+      if (!audio || !progress || !Number.isFinite(audio.duration)) {
+        progress?.style.setProperty("--progress", "0%");
         return;
       }
-
-      if (video.getAttribute("src") !== nextSrc) {
-        video.classList.remove("is-video-ready");
-        removeVideoSource();
-        video.setAttribute("src", nextSrc);
-        video.load();
-      }
-
-      void video.play().catch(() => {
-        video.classList.remove("is-video-ready");
-      });
+      const percent = Math.min(100, (audio.currentTime / audio.duration) * 100);
+      progress.style.setProperty("--progress", `${percent}%`);
     };
 
-    video.addEventListener(
-      "loadeddata",
+    toggle?.addEventListener(
+      "click",
       () => {
-        video.classList.add("is-video-ready");
+        if (!audio) return;
+        if (audio.paused) {
+          void audio.play().catch(() => {
+            if (lyric) lyric.textContent = lyricError;
+          });
+        } else {
+          audio.pause();
+        }
       },
       { signal },
     );
 
-    video.addEventListener(
-      "error",
-      () => {
-        video.classList.remove("is-video-ready");
-      },
-      { signal },
-    );
+    audio?.addEventListener("play", updatePlayerState, { signal });
+    audio?.addEventListener("pause", updatePlayerState, { signal });
+    audio?.addEventListener("ended", updatePlayerState, { signal });
+    audio?.addEventListener("timeupdate", updateProgress, { signal });
+    audio?.addEventListener("loadedmetadata", updateProgress, { signal });
+    updatePlayerState();
+    updateProgress();
 
-    const observer = new MutationObserver(syncVideoSource);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    window.__homeDashboardVideoObserver = observer;
+    const resolveTheme = (mode: string) => {
+      if (mode === "auto") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      return mode === "dark" ? "dark" : "light";
+    };
 
-    syncVideoSource();
+    const syncThemeButtons = () => {
+      let saved = "auto";
+      try {
+        saved = localStorage.getItem("blog:theme") || "auto";
+      } catch {}
+      document
+        .querySelectorAll<HTMLButtonElement>("[data-home-theme-mode]")
+        .forEach((button) => {
+          const isActive = button.dataset.homeThemeMode === saved;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        });
+    };
+
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-home-theme-mode]")
+      .forEach((button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            const mode = button.dataset.homeThemeMode ?? "auto";
+            root.setAttribute("data-theme", resolveTheme(mode));
+            try {
+              localStorage.setItem("blog:theme", mode);
+            } catch {}
+            syncThemeButtons();
+          },
+          { signal },
+        );
+      });
+
+    const mixChannel = (channel: number, target: number, amount: number) =>
+      Math.round(channel + (target - channel) * amount);
+
+    const setBrandColor = (hex: string) => {
+      const value = hex.replace("#", "");
+      const r = Number.parseInt(value.slice(0, 2), 16);
+      const g = Number.parseInt(value.slice(2, 4), 16);
+      const b = Number.parseInt(value.slice(4, 6), 16);
+      if (![r, g, b].every(Number.isFinite)) return;
+
+      const mix = (target: number, amount: number) =>
+        `${mixChannel(r, target, amount)} ${mixChannel(g, target, amount)} ${mixChannel(b, target, amount)}`;
+
+      const scale = {
+        50: mix(255, 0.94),
+        100: mix(255, 0.88),
+        200: mix(255, 0.75),
+        300: mix(255, 0.55),
+        400: mix(255, 0.34),
+        500: mix(255, 0.12),
+        600: `${r} ${g} ${b}`,
+        700: mix(0, 0.14),
+        800: mix(0, 0.28),
+        900: mix(0, 0.42),
+      };
+
+      root.style.setProperty("--color-brand", scale[600]);
+      for (const [key, color] of Object.entries(scale)) {
+        root.style.setProperty(`--color-brand-${key}`, color);
+      }
+      try {
+        localStorage.setItem("blog:brand-color", hex);
+      } catch {}
+    };
+
+    const syncBrandButtons = () => {
+      let saved = "";
+      try {
+        saved = localStorage.getItem("blog:brand-color") || "";
+      } catch {}
+      document
+        .querySelectorAll<HTMLButtonElement>("[data-home-brand-color]")
+        .forEach((button) => {
+          const isActive =
+            button.dataset.homeBrandColor?.toLowerCase() ===
+            saved.toLowerCase();
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        });
+    };
+
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-home-brand-color]")
+      .forEach((button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            const color = button.dataset.homeBrandColor;
+            if (!color) return;
+            setBrandColor(color);
+            syncBrandButtons();
+          },
+          { signal },
+        );
+      });
+
+    syncThemeButtons();
+    syncBrandButtons();
   };
 
-  initHomeDashboardVideo();
+  initHomeDashboard();
 
-  if (!window.__homeDashboardVideoPageLoadBound) {
-    document.addEventListener("astro:page-load", initHomeDashboardVideo);
-    window.__homeDashboardVideoPageLoadBound = true;
+  if (!window.__homeDashboardPageLoadBound) {
+    document.addEventListener("astro:page-load", initHomeDashboard);
+    window.__homeDashboardPageLoadBound = true;
   }
 </script>
 
@@ -363,44 +811,38 @@ const moduleCards = [
   .home-dashboard {
     --home-ink: 15 23 42;
     --home-muted: 71 85 105;
-    --home-soft: 51 65 85;
-    --home-panel: 255 255 255;
-    --home-border: 148 163 184;
+    --home-soft: 100 116 139;
+    --home-glass: 255 255 255;
+    --home-glass-alpha: 0.42;
+    --home-glass-hover-alpha: 0.58;
+    --home-border: 255 255 255;
+    --home-border-alpha: 0.5;
     --home-shadow: 15 23 42;
-    --home-surface-wash: 255 255 255;
-    --home-field: 255 255 255;
-    --home-item: 255 255 255;
-    --home-pill: 241 245 249;
-    --home-fallback-panel: 255 255 255;
-    --home-glass-alpha: 0.66;
-    --home-glass-strong-alpha: 0.76;
-    --home-glass-hover-alpha: 0.82;
+    --home-chip: 255 255 255;
 
     position: relative;
     isolation: isolate;
     height: 100vh;
     height: 100svh;
     margin-top: -3rem;
-    overflow: hidden;
-    padding: 4.8rem 1rem 1rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4.75rem 0.85rem 1rem;
     color: rgb(var(--home-ink));
+    overscroll-behavior: contain;
   }
 
   :global(html[data-theme="dark"]) .home-dashboard {
-    --home-ink: 255 255 255;
-    --home-muted: 226 232 240;
-    --home-soft: 203 213 225;
-    --home-panel: 2 6 23;
+    --home-ink: 248 250 252;
+    --home-muted: 203 213 225;
+    --home-soft: 148 163 184;
+    --home-glass: 2 6 23;
+    --home-glass-alpha: 0.36;
+    --home-glass-hover-alpha: 0.5;
     --home-border: 255 255 255;
+    --home-border-alpha: 0.18;
     --home-shadow: 0 0 0;
-    --home-surface-wash: 15 23 42;
-    --home-field: 15 23 42;
-    --home-item: 15 23 42;
-    --home-pill: 15 23 42;
-    --home-fallback-panel: 2 6 23;
-    --home-glass-alpha: 0.58;
-    --home-glass-strong-alpha: 0.68;
-    --home-glass-hover-alpha: 0.74;
+    --home-chip: 15 23 42;
   }
 
   .home-dashboard__media {
@@ -416,29 +858,19 @@ const moduleCards = [
   .home-dashboard__placeholder {
     position: absolute;
     inset: 0;
-    opacity: 1;
     background:
       radial-gradient(
-        circle at 18% 16%,
-        rgb(var(--color-brand-200) / 0.55),
+        circle at 20% 16%,
+        rgb(var(--color-brand-200) / 0.44),
         transparent 28rem
       ),
       radial-gradient(
-        circle at 82% 22%,
-        rgb(125 211 252 / 0.42),
+        circle at 78% 18%,
+        rgb(125 211 252 / 0.32),
         transparent 30rem
       ),
-      radial-gradient(
-        circle at 50% 92%,
-        rgb(254 202 202 / 0.5),
-        transparent 34rem
-      ),
-      linear-gradient(
-        135deg,
-        rgb(248 250 252),
-        rgb(226 232 240) 48%,
-        rgb(241 245 249)
-      );
+      linear-gradient(135deg, rgb(248 250 252), rgb(226 232 240));
+    opacity: 1;
     transition: opacity 0.35s ease;
   }
 
@@ -454,8 +886,8 @@ const moduleCards = [
   }
 
   .home-dashboard__video--light.is-video-ready {
-    opacity: 0.88;
-    filter: saturate(1.04) contrast(0.98) brightness(1.04);
+    opacity: 0.92;
+    filter: saturate(1.03) contrast(0.98) brightness(1.04);
   }
 
   .home-dashboard__overlay {
@@ -464,510 +896,695 @@ const moduleCards = [
     background:
       linear-gradient(
         180deg,
-        rgb(255 255 255 / 0.72) 0%,
-        rgb(255 255 255 / 0.42) 42%,
-        rgb(248 250 252 / 0.78) 100%
+        rgb(255 255 255 / 0.46) 0%,
+        rgb(255 255 255 / 0.18) 42%,
+        rgb(255 255 255 / 0.36) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(255 255 255 / 0.62),
-        rgb(255 255 255 / 0.14) 50%,
-        rgb(255 255 255 / 0.58)
+        rgb(255 255 255 / 0.34),
+        rgb(255 255 255 / 0.08) 52%,
+        rgb(255 255 255 / 0.3)
       );
-    opacity: 1;
-    transition: opacity 0.35s ease;
   }
 
   :global(html[data-theme="dark"]) .home-dashboard__media {
     background:
       radial-gradient(
-        circle at 18% 18%,
-        rgb(var(--color-brand-400) / 0.38),
-        transparent 34rem
+        circle at 18% 20%,
+        rgb(var(--color-brand-500) / 0.32),
+        transparent 32rem
       ),
-      linear-gradient(135deg, rgb(25 32 60), rgb(94 57 116) 46%, rgb(16 24 39));
+      linear-gradient(135deg, rgb(16 24 39), rgb(75 50 98), rgb(2 6 23));
   }
 
-  :global(html[data-theme="dark"]) .home-dashboard__placeholder {
-    opacity: 0;
-  }
-
+  :global(html[data-theme="dark"]) .home-dashboard__placeholder,
   :global(html[data-theme="dark"]) .home-dashboard__video--light {
     opacity: 0;
   }
 
   :global(html[data-theme="dark"]) .home-dashboard__video--dark.is-video-ready {
-    opacity: 0.82;
+    opacity: 0.86;
   }
 
   :global(html[data-theme="dark"]) .home-dashboard__overlay {
     background:
       linear-gradient(
         180deg,
-        rgb(2 6 23 / 0.74) 0%,
-        rgb(15 23 42 / 0.32) 42%,
-        rgb(2 6 23 / 0.82) 100%
+        rgb(2 6 23 / 0.52) 0%,
+        rgb(15 23 42 / 0.18) 42%,
+        rgb(2 6 23 / 0.58) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(2 6 23 / 0.38),
-        rgb(2 6 23 / 0.08) 50%,
-        rgb(2 6 23 / 0.42)
+        rgb(2 6 23 / 0.22),
+        rgb(2 6 23 / 0.04) 52%,
+        rgb(2 6 23 / 0.28)
       );
-    opacity: 1;
   }
 
   .home-dashboard__inner {
-    width: min(1120px, 100%);
+    width: min(1260px, 100%);
+    min-height: 100%;
     margin: 0 auto;
-    height: 100%;
-    overflow: hidden;
   }
 
-  .home-dashboard__hero {
+  .home-dashboard__layout {
     display: grid;
-    justify-items: center;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .home-stack {
+    display: grid;
     min-width: 0;
-    padding: clamp(0.75rem, 3vw, 2rem) 0 clamp(1rem, 3vw, 2rem);
-    text-align: center;
+    gap: 1rem;
+  }
+
+  .home-glass {
+    min-width: 0;
+    border: 1px solid rgb(var(--home-border) / var(--home-border-alpha));
+    border-radius: 1.15rem;
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.04)),
+      rgb(var(--home-glass) / var(--home-glass-alpha));
+    box-shadow:
+      0 22px 58px rgb(var(--home-shadow) / 0.16),
+      inset 0 1px 0 rgb(255 255 255 / 0.24);
+    backdrop-filter: blur(18px) saturate(165%);
+    -webkit-backdrop-filter: blur(18px) saturate(165%);
   }
 
   .home-dashboard a {
     color: inherit;
   }
 
-  .home-eyebrow {
-    margin: 0 0 0.7rem;
-    color: rgb(var(--home-soft) / 0.88);
-    font-size: 0.76rem;
-    font-weight: 800;
+  .home-kicker {
+    margin: 0 0 0.45rem;
+    color: rgb(var(--home-soft) / 0.92);
+    font-size: 0.72rem;
+    font-weight: 900;
     letter-spacing: 0;
     text-transform: uppercase;
   }
 
-  .home-dashboard__hero h1 {
-    max-width: min(100%, 56rem);
-    margin: 0;
-    color: rgb(var(--home-ink));
-    font-family: var(--font-serif, Georgia, serif);
-    font-size: clamp(2.35rem, 9vw, 5.7rem);
-    line-height: 0.96;
-    letter-spacing: 0;
-    text-shadow: 0 18px 50px rgb(var(--home-shadow) / 0.18);
-    overflow-wrap: anywhere;
-  }
-
-  .home-dashboard__subtitle {
-    max-width: 46rem;
-    margin: 0.75rem 0 0;
-    color: rgb(var(--home-ink) / 0.94);
-    font-size: clamp(1rem, 2.2vw, 1.32rem);
-    font-weight: 700;
-    line-height: 1.55;
-    text-shadow: 0 8px 24px rgb(var(--home-shadow) / 0.14);
-  }
-
-  .home-dashboard__bio {
-    max-width: 36rem;
-    margin: 0.25rem 0 0;
-    color: rgb(var(--home-muted) / 0.9);
-    line-height: 1.55;
-    text-shadow: 0 8px 22px rgb(var(--home-shadow) / 0.12);
-  }
-
-  .home-dashboard__actions,
-  .home-dashboard__socials {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.7rem;
-    margin-top: 0.9rem;
-    max-width: 100%;
-  }
-
-  .primary-action,
-  .secondary-action,
-  .home-dashboard__socials a,
-  .search-panel__action,
-  .section-heading a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.55rem;
-    border-radius: 999px;
-    font-weight: 800;
-    line-height: 1;
-    text-decoration: none;
-    transition:
-      transform 0.22s ease,
-      background-color 0.22s ease,
-      border-color 0.22s ease,
-      box-shadow 0.22s ease;
-  }
-
-  .primary-action,
-  .secondary-action {
-    gap: 0.5rem;
-    max-width: 100%;
-    padding: 0 1.1rem;
-    white-space: nowrap;
-  }
-
-  .primary-action {
-    color: white;
-    background: rgb(var(--color-brand-600) / 0.96);
-    box-shadow: 0 14px 38px rgb(var(--color-brand-700) / 0.38);
-  }
-
-  .primary-action:hover {
-    color: white;
-    background: rgb(var(--color-brand-700));
-    transform: translateY(-2px);
-  }
-
-  .secondary-action,
-  .home-dashboard__socials a {
-    color: rgb(var(--home-ink));
-    border: 1px solid rgb(var(--home-border) / 0.28);
-    background: rgb(var(--home-panel) / var(--home-glass-alpha));
-    box-shadow:
-      0 12px 34px rgb(var(--home-shadow) / 0.1),
-      inset 0 1px 0 rgb(255 255 255 / 0.18);
-    backdrop-filter: blur(18px) saturate(160%);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-  }
-
-  .secondary-action:hover,
-  .home-dashboard__socials a:hover {
-    color: rgb(var(--home-ink));
-    border-color: rgb(var(--home-border) / 0.45);
-    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
-    transform: translateY(-2px);
-  }
-
-  .home-dashboard__socials a {
-    width: 2.55rem;
-  }
-
-  .home-dashboard__content {
-    display: grid;
-    gap: 1rem;
-    min-width: 0;
-    max-height: calc(100% - 16rem);
-    overflow: hidden;
-  }
-
-  .home-dashboard__utility {
-    display: grid;
-    gap: 1rem;
-    min-width: 0;
-  }
-
-  .home-dashboard .glass,
-  .home-dashboard .glass-strong {
-    color: rgb(var(--home-ink));
-    border-color: rgb(var(--home-border) / 0.26);
-    background: rgb(var(--home-panel) / var(--home-glass-alpha));
-    box-shadow:
-      0 18px 50px rgb(var(--home-shadow) / 0.12),
-      inset 0 1px 0 rgb(255 255 255 / 0.2);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-  }
-
-  .home-dashboard .glass-strong {
-    background: rgb(var(--home-panel) / var(--home-glass-strong-alpha));
-  }
-
-  .search-panel,
-  .stat-card,
-  .latest-panel,
-  .module-card {
-    min-width: 0;
-    border-radius: 1rem;
-  }
-
-  .search-panel {
+  .profile-card,
+  .search-card,
+  .player-card,
+  .posts-carousel,
+  .chatter-carousel,
+  .theme-card,
+  .site-dashboard {
     padding: 1rem;
   }
 
-  .search-panel__field {
+  .profile-card__topline,
+  .profile-card__status,
+  .profile-card__socials,
+  .profile-card__actions,
+  .panel-heading,
+  .panel-link,
+  .player-card__track,
+  .lyric-bar,
+  .module-chip,
+  .theme-card__colors,
+  .theme-card__colors div {
+    display: flex;
+    align-items: center;
+  }
+
+  .profile-card__topline {
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: rgb(var(--home-soft));
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .profile-card__status {
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .profile-card__status span {
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 999px;
+    background: rgb(16 185 129);
+    box-shadow: 0 0 0 0.24rem rgb(16 185 129 / 0.18);
+  }
+
+  .profile-card__identity {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: center;
+    margin-top: 1.15rem;
+  }
+
+  .profile-card__avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    border: 1px solid rgb(255 255 255 / 0.55);
+    border-radius: 1.1rem;
+    background: rgb(255 255 255 / 0.28);
+    box-shadow: 0 14px 34px rgb(var(--home-shadow) / 0.16);
+    object-fit: cover;
+  }
+
+  .profile-card h1 {
+    margin: 0;
+    color: rgb(var(--home-ink));
+    font-family: var(--font-serif, Georgia, serif);
+    font-size: clamp(1.65rem, 6vw, 2.45rem);
+    line-height: 1.02;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    text-shadow: 0 10px 28px rgb(var(--home-shadow) / 0.18);
+  }
+
+  .profile-card__identity p,
+  .profile-card__bio,
+  .post-card p,
+  .chatter-card p,
+  .module-chip small,
+  .player-card__track span,
+  .dashboard-stat span {
+    color: rgb(var(--home-muted) / 0.9);
+  }
+
+  .profile-card__identity p,
+  .profile-card__subtitle,
+  .profile-card__bio {
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  .profile-card__subtitle {
+    margin-top: 1rem;
+    color: rgb(var(--home-ink) / 0.94);
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .profile-card__bio {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+  }
+
+  .profile-card__socials,
+  .profile-card__actions {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+  }
+
+  .profile-card__socials a,
+  .home-action,
+  .panel-link,
+  .player-toggle,
+  .theme-card__modes button,
+  .theme-card__colors button {
+    border: 1px solid rgb(var(--home-border) / 0.36);
+    background: rgb(var(--home-chip) / 0.34);
+    color: rgb(var(--home-ink));
+    text-decoration: none;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .profile-card__socials a,
+  .player-toggle,
+  .theme-card__colors button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 999px;
+  }
+
+  .profile-card__socials a {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .home-action,
+  .panel-link,
+  .theme-card__modes button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 2.45rem;
+    border-radius: 999px;
+    padding: 0 0.9rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .home-action {
+    flex: 1 1 9rem;
+    color: white;
+    border-color: rgb(var(--color-brand-500) / 0.55);
+    background: rgb(var(--color-brand-600) / 0.9);
+    box-shadow: 0 14px 32px rgb(var(--color-brand-700) / 0.34);
+  }
+
+  .home-action--quiet {
+    color: rgb(var(--home-ink));
+    border-color: rgb(var(--home-border) / 0.36);
+    background: rgb(var(--home-chip) / 0.28);
+    box-shadow: none;
+  }
+
+  .profile-card__socials a:hover,
+  .home-action:hover,
+  .panel-link:hover,
+  .player-toggle:hover,
+  .theme-card__modes button:hover,
+  .theme-card__colors button:hover,
+  .module-chip:hover,
+  .post-card a:hover,
+  .chatter-card:hover {
+    color: rgb(var(--home-ink));
+    border-color: rgb(var(--home-border) / 0.62);
+    background: rgb(var(--home-glass) / var(--home-glass-hover-alpha));
+    transform: translateY(-2px);
+  }
+
+  .home-action:hover {
+    color: white;
+    background: rgb(var(--color-brand-700) / 0.94);
+  }
+
+  .search-card__field {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     width: 100%;
+    min-height: 3.1rem;
     align-items: center;
-    gap: 0.6rem;
-    min-height: 3rem;
-    padding: 0.25rem 0.35rem 0.25rem 0.85rem;
-    border: 1px solid rgb(var(--home-border) / 0.16);
+    gap: 0.65rem;
+    border: 1px solid rgb(var(--home-border) / 0.28);
     border-radius: 999px;
-    background: rgb(var(--home-field) / 0.35);
+    padding: 0.25rem 0.8rem;
+    background: rgb(var(--home-chip) / 0.28);
     color: rgb(var(--home-muted));
     cursor: pointer;
     text-align: left;
   }
 
-  .search-panel__field:hover {
-    background: rgb(var(--home-field) / 0.48);
+  .search-card__field span {
+    min-width: 0;
+    overflow: hidden;
+    color: rgb(var(--home-ink));
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .search-panel__placeholder {
-    display: block;
-    min-width: 0;
+  .panel-heading {
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .panel-heading--compact {
+    margin-bottom: 0.85rem;
+  }
+
+  .panel-heading h2,
+  .theme-card h2,
+  .site-dashboard h2 {
+    margin: 0;
     color: rgb(var(--home-ink));
+    font-family: var(--font-serif, Georgia, serif);
+    font-size: clamp(1.25rem, 3.8vw, 1.8rem);
+    line-height: 1.16;
+    letter-spacing: 0;
+  }
+
+  .panel-link {
+    flex: 0 0 auto;
+    min-height: 2.1rem;
+    padding: 0 0.75rem;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .player-toggle {
+    width: 2.8rem;
+    height: 2.8rem;
+    color: white;
+    background: rgb(var(--color-brand-600) / 0.92);
+    cursor: pointer;
+  }
+
+  .player-toggle__pause,
+  .player-card.is-playing .player-toggle__play {
+    display: none;
+  }
+
+  .player-card.is-playing .player-toggle__pause {
+    display: block;
+  }
+
+  .player-card__track {
+    gap: 0.72rem;
+    min-width: 0;
+  }
+
+  .player-card__disc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    color: rgb(var(--color-brand-700));
+    background: rgb(var(--color-brand-100) / 0.62);
+  }
+
+  :global(html[data-theme="dark"]) .player-card__disc {
+    color: rgb(var(--color-brand-200));
+    background: rgb(var(--color-brand-900) / 0.48);
+  }
+
+  .player-card__track div {
+    display: grid;
+    min-width: 0;
+    gap: 0.12rem;
+  }
+
+  .player-card__track strong,
+  .player-card__track span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .search-panel__action {
-    width: 2.5rem;
+  .player-progress {
+    --progress: 0%;
+    height: 0.45rem;
+    margin-top: 0.95rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(var(--home-chip) / 0.32);
+  }
+
+  .player-progress span {
+    display: block;
+    width: var(--progress);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-brand-400)),
+      rgb(var(--color-brand-700))
+    );
+    transition: width 0.2s ease;
+  }
+
+  .lyric-bar {
+    gap: 0.45rem;
     min-height: 2.5rem;
-    border: 0;
-    color: white;
-    background: rgb(var(--color-brand-600));
+    margin-top: 0.75rem;
+    border: 1px solid rgb(var(--home-border) / 0.24);
+    border-radius: 0.85rem;
+    padding: 0.55rem 0.7rem;
+    background: rgb(var(--home-chip) / 0.22);
+    color: rgb(var(--home-muted));
   }
 
-  .search-panel__field:hover .search-panel__action {
-    background: rgb(var(--color-brand-700));
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .stat-card {
-    padding: 1rem;
-  }
-
-  .stat-card strong {
-    display: block;
-    color: rgb(var(--home-ink));
-    font-size: clamp(1.55rem, 7vw, 2.35rem);
-    line-height: 1;
-  }
-
-  .stat-card span {
-    display: block;
-    margin-top: 0.45rem;
-    color: rgb(var(--home-muted) / 0.88);
-    font-size: 0.82rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-  }
-
-  .latest-panel {
-    padding: 1.1rem;
-  }
-
-  .section-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .section-heading h2 {
+  .lyric-bar p {
+    min-width: 0;
     margin: 0;
+    overflow: hidden;
     color: rgb(var(--home-ink));
-    font-family: var(--font-serif, Georgia, serif);
-    font-size: clamp(1.35rem, 5vw, 2rem);
-    line-height: 1.15;
-    letter-spacing: 0;
-  }
-
-  .section-heading a {
-    flex: 0 0 auto;
-    gap: 0.35rem;
-    min-height: 2.25rem;
-    padding: 0 0.85rem;
-    color: rgb(var(--home-ink));
-    border: 1px solid rgb(var(--home-border) / 0.18);
-    background: rgb(var(--home-panel) / var(--home-glass-alpha));
-    font-size: 0.88rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .section-heading a:hover {
-    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
-    transform: translateY(-1px);
-  }
-
-  .latest-list {
+  .rail {
     display: grid;
-    gap: 0.75rem;
-  }
-
-  .latest-item {
-    min-width: 0;
-  }
-
-  .latest-item__link {
-    display: block;
-    padding: 0.95rem;
-    border: 1px solid rgb(var(--home-border) / 0.16);
-    border-radius: 0.85rem;
-    color: rgb(var(--home-ink));
-    background: rgb(var(--home-item) / 0.24);
-    text-decoration: none;
-  }
-
-  .latest-item__link:hover {
-    color: rgb(var(--home-ink));
-    background: rgb(var(--home-item) / 0.34);
-  }
-
-  .latest-item time {
-    display: block;
-    color: rgb(var(--home-muted) / 0.78);
-    font-size: 0.78rem;
-  }
-
-  .latest-item h3 {
-    display: -webkit-box;
-    margin: 0.35rem 0 0;
-    overflow: hidden;
-    color: rgb(var(--home-ink));
-    font-size: clamp(1rem, 4vw, 1.18rem);
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .latest-item p {
-    display: -webkit-box;
-    margin: 0.45rem 0 0;
-    overflow: hidden;
-    color: rgb(var(--home-muted) / 0.86);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .latest-item__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.75rem;
-  }
-
-  .latest-item__meta span {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    border-radius: 999px;
-    padding: 0.2rem 0.5rem;
-    color: rgb(var(--home-ink));
-    background: rgb(var(--color-brand-600) / 0.22);
-    font-size: 0.75rem;
-  }
-
-  .modules-panel {
-    min-width: 0;
-  }
-
-  .modules-heading {
-    margin: 0 0 0.75rem;
-    padding: 0 0.15rem;
-  }
-
-  .module-grid {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .module-card {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
+    grid-auto-columns: minmax(15.5rem, 52%);
+    grid-auto-flow: column;
     gap: 0.85rem;
-    min-height: 5.3rem;
+    overflow-x: auto;
+    padding: 0.1rem 0.15rem 0.65rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .post-card {
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .post-card a,
+  .chatter-card {
+    display: grid;
+    min-height: 13.25rem;
+    border: 1px solid rgb(var(--home-border) / 0.24);
+    border-radius: 1rem;
     padding: 1rem;
+    background: rgb(var(--home-chip) / 0.22);
+    color: rgb(var(--home-ink));
     text-decoration: none;
   }
 
-  .module-card:hover {
-    color: rgb(var(--home-ink));
-    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
-    transform: translateY(-2px);
+  .post-card time,
+  .chatter-card time {
+    color: rgb(var(--home-soft));
+    font-size: 0.78rem;
+    font-weight: 800;
   }
 
-  .module-card__icon {
+  .post-card h3,
+  .chatter-card h3 {
+    display: -webkit-box;
+    margin: 0.55rem 0 0;
+    overflow: hidden;
+    color: rgb(var(--home-ink));
+    font-size: clamp(1.05rem, 3.2vw, 1.38rem);
+    line-height: 1.28;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .post-card p,
+  .chatter-card p {
+    display: -webkit-box;
+    margin: 0.55rem 0 0;
+    overflow: hidden;
+    font-size: 0.9rem;
+    line-height: 1.62;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .post-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-self: end;
+    margin-top: 1rem;
+    color: rgb(var(--home-ink));
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .post-card__footer span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chatter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .chatter-card {
+    min-height: 9.5rem;
+  }
+
+  .chatter-card--empty {
+    grid-column: 1 / -1;
+  }
+
+  .module-strip {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .module-chip {
+    gap: 0.72rem;
+    min-height: 5.5rem;
+    padding: 0.85rem;
+    text-decoration: none;
+  }
+
+  .module-chip__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2.45rem;
+    height: 2.45rem;
+    flex: 0 0 auto;
     border-radius: 0.85rem;
     color: white;
     background: rgb(var(--color-brand-600));
-    box-shadow: 0 12px 28px rgb(0 0 0 / 0.24);
+    box-shadow: 0 14px 28px rgb(0 0 0 / 0.2);
   }
 
-  .module-card--cyan .module-card__icon {
+  .module-chip--cyan .module-chip__icon {
     background: rgb(8 145 178);
   }
 
-  .module-card--emerald .module-card__icon {
+  .module-chip--emerald .module-chip__icon {
     background: rgb(5 150 105);
   }
 
-  .module-card--amber .module-card__icon {
+  .module-chip--amber .module-chip__icon {
     background: rgb(217 119 6);
   }
 
-  .module-card--rose .module-card__icon {
+  .module-chip--rose .module-chip__icon {
     background: rgb(225 29 72);
   }
 
-  .module-card__body {
+  .module-chip__body {
     display: grid;
     min-width: 0;
-    gap: 0.25rem;
+    gap: 0.18rem;
   }
 
-  .module-card__title {
+  .module-chip__body span,
+  .module-chip strong {
     color: rgb(var(--home-ink));
-    font-weight: 800;
-    overflow-wrap: anywhere;
+    font-weight: 900;
   }
 
-  .module-card__desc {
+  .module-chip__body small {
     display: -webkit-box;
     overflow: hidden;
-    color: rgb(var(--home-muted) / 0.86);
-    font-size: 0.86rem;
-    line-height: 1.55;
+    font-size: 0.78rem;
+    line-height: 1.45;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
 
-  .module-card__count {
-    justify-self: end;
-    max-width: 5.5rem;
-    overflow-wrap: anywhere;
+  .module-chip strong {
+    margin-left: auto;
     border-radius: 999px;
-    padding: 0.25rem 0.55rem;
-    color: rgb(var(--home-ink));
-    background: rgb(var(--home-pill) / 0.62);
-    font-size: 0.78rem;
-    font-weight: 800;
+    padding: 0.2rem 0.48rem;
+    background: rgb(var(--home-chip) / 0.32);
+    font-size: 0.74rem;
     text-align: center;
+  }
+
+  .theme-card__modes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .theme-card__modes button {
+    min-width: 0;
+    min-height: 2.45rem;
+    padding: 0 0.35rem;
+    cursor: pointer;
+    font-size: 0.78rem;
+  }
+
+  .theme-card__modes button.is-active,
+  .theme-card__colors button.is-active {
+    border-color: rgb(var(--color-brand-500) / 0.8);
+    background: rgb(var(--color-brand-500) / 0.22);
+    box-shadow: 0 0 0 0.18rem rgb(var(--color-brand-500) / 0.12);
+  }
+
+  .theme-card__colors {
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.95rem;
+  }
+
+  .theme-card__colors span {
+    color: rgb(var(--home-muted));
+    font-size: 0.84rem;
+    font-weight: 900;
+  }
+
+  .theme-card__colors div {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.42rem;
+  }
+
+  .theme-card__colors button {
+    width: 1.65rem;
+    height: 1.65rem;
+    background: var(--swatch);
+    cursor: pointer;
+  }
+
+  .site-dashboard__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .dashboard-stat {
+    min-width: 0;
+    border: 1px solid rgb(var(--home-border) / 0.22);
+    border-radius: 0.9rem;
+    padding: 0.8rem;
+    background: rgb(var(--home-chip) / 0.22);
+  }
+
+  .dashboard-stat svg {
+    color: rgb(var(--color-brand-700));
+  }
+
+  :global(html[data-theme="dark"]) .dashboard-stat svg {
+    color: rgb(var(--color-brand-300));
+  }
+
+  .dashboard-stat strong {
+    display: block;
+    margin-top: 0.55rem;
+    color: rgb(var(--home-ink));
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    line-height: 1;
+  }
+
+  .dashboard-stat span {
+    display: block;
+    margin-top: 0.32rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
   .empty-state {
     display: grid;
     place-items: center;
-    min-height: 11rem;
-    border: 1px solid rgb(var(--home-border) / 0.14);
-    border-radius: 0.85rem;
-    color: rgb(var(--home-muted) / 0.88);
-    background: rgb(var(--home-item) / 0.2);
+    min-height: 13rem;
+    border: 1px solid rgb(var(--home-border) / 0.22);
+    border-radius: 1rem;
+    background: rgb(var(--home-chip) / 0.2);
+    color: rgb(var(--home-muted));
     text-align: center;
   }
 
@@ -975,123 +1592,124 @@ const moduleCards = [
     margin: 0.65rem 0 0;
   }
 
-  @supports not (backdrop-filter: blur(22px)) {
-    .home-dashboard .glass,
-    .home-dashboard .glass-strong,
-    .secondary-action,
-    .home-dashboard__socials a {
-      background: rgb(var(--home-fallback-panel) / 0.68);
+  @supports not (backdrop-filter: blur(18px)) {
+    .home-glass {
+      background: rgb(var(--home-glass) / 0.78);
     }
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 760px) {
     .home-dashboard {
-      padding-inline: 1.5rem;
+      padding-inline: 1.2rem;
     }
 
-    .module-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .profile-card,
+    .search-card,
+    .player-card,
+    .posts-carousel,
+    .chatter-carousel,
+    .theme-card,
+    .site-dashboard {
+      padding: 1.1rem;
     }
   }
 
-  @media (min-width: 980px) {
+  @media (min-width: 1060px) {
     .home-dashboard {
-      padding-top: 5.25rem;
-      padding-bottom: 1.25rem;
+      padding-top: 5rem;
+      padding-bottom: 1.15rem;
     }
 
-    .home-dashboard__content {
-      grid-template-columns: minmax(17rem, 0.78fr) minmax(0, 1.18fr) minmax(
-          20rem,
-          0.92fr
-        );
-      align-items: start;
-      max-height: calc(100% - 18rem);
+    .home-dashboard__layout {
+      grid-template-columns:
+        minmax(17rem, 0.88fr)
+        minmax(0, 1.32fr)
+        minmax(18rem, 0.9fr);
     }
 
-    .latest-panel {
-      padding: 1.35rem;
+    .home-stack--profile,
+    .home-stack--dashboard {
+      position: sticky;
+      top: 4.85rem;
+    }
+
+    .rail {
+      grid-auto-columns: minmax(16rem, 46%);
     }
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 759px) {
     .home-dashboard {
-      padding-inline: 0.75rem;
-      padding-bottom: 0.75rem;
+      padding-inline: 0.7rem;
+      padding-bottom: 0.8rem;
     }
 
-    .home-dashboard__subtitle,
-    .home-dashboard__bio,
-    .latest-item p,
-    .module-card__desc {
-      display: none;
+    .home-dashboard__layout,
+    .home-stack {
+      gap: 0.8rem;
     }
 
-    .home-dashboard__content {
-      gap: 0.75rem;
-      max-height: calc(100% - 11.5rem);
+    .profile-card__identity {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
     }
 
-    .home-dashboard__utility {
-      gap: 0.75rem;
+    .profile-card__topline,
+    .profile-card__socials,
+    .profile-card__actions {
+      justify-content: center;
     }
 
-    .stats-grid,
-    .modules-panel {
-      display: none;
+    .profile-card__subtitle,
+    .profile-card__bio {
+      text-align: center;
     }
 
-    .search-panel,
-    .latest-panel {
-      padding: 0.8rem;
+    .rail {
+      grid-auto-columns: minmax(14.5rem, 82%);
     }
 
-    .latest-list {
-      gap: 0.5rem;
+    .chatter-grid,
+    .module-strip {
+      grid-template-columns: 1fr;
     }
 
-    .latest-item:nth-child(n + 3) {
-      display: none;
+    .home-action {
+      flex-basis: 100%;
     }
+  }
 
-    .home-dashboard__actions {
-      width: 100%;
-    }
-
-    .primary-action,
-    .secondary-action {
-      flex: 1 1 10rem;
-    }
-
-    .section-heading {
-      align-items: stretch;
+  @media (max-width: 430px) {
+    .panel-heading {
+      align-items: flex-start;
       flex-direction: column;
     }
 
-    .section-heading a {
+    .panel-link {
       width: max-content;
       max-width: 100%;
     }
 
-    .module-card {
-      grid-template-columns: auto minmax(0, 1fr);
+    .profile-card__avatar {
+      width: 4rem;
+      height: 4rem;
     }
 
-    .module-card__count {
-      grid-column: 2;
-      justify-self: start;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .stats-grid {
+    .theme-card__modes {
       grid-template-columns: 1fr;
     }
 
-    .primary-action,
-    .secondary-action {
-      white-space: normal;
-      text-align: center;
+    .site-dashboard__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .module-chip {
+      align-items: flex-start;
+    }
+
+    .module-chip strong {
+      margin-left: 0;
     }
   }
 </style>
