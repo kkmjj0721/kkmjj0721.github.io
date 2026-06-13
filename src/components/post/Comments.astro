@@ -1,0 +1,377 @@
+---
+import { Icon } from "astro-icon/components";
+import { site } from "@data/site";
+import type { Lang } from "@i18n/ui";
+
+type CommentMode = "post" | "guestbook";
+
+export interface Props {
+  mode?: CommentMode;
+  lang?: Lang;
+  enabled?: boolean;
+  title?: string;
+  description?: string;
+}
+
+const {
+  mode = "post",
+  lang = "zh",
+  enabled = true,
+  title,
+  description,
+} = Astro.props;
+
+const giscus = site.giscus;
+const category =
+  mode === "guestbook" ? giscus.guestbookCategory : giscus.category;
+const categoryId =
+  mode === "guestbook" ? giscus.guestbookCategoryId : giscus.categoryId;
+
+function isConfigured(value: string | undefined) {
+  if (!value) return false;
+  const normalized = value.trim();
+  if (!normalized) return false;
+  return !/^(TODO|CHANGE_ME|YOUR_|PLACEHOLDER)/i.test(normalized);
+}
+
+const missing = [
+  !isConfigured(giscus.repo) && "repo",
+  !isConfigured(giscus.repoId) && "repoId",
+  !isConfigured(category) &&
+    (mode === "guestbook" ? "guestbookCategory" : "category"),
+  !isConfigured(categoryId) &&
+    (mode === "guestbook" ? "guestbookCategoryId" : "categoryId"),
+].filter(Boolean);
+
+const canLoad = enabled && missing.length === 0;
+const instanceId = `giscus-${mode}-${Astro.url.pathname.replace(/[^a-z0-9]+/gi, "-")}`;
+const copy =
+  lang === "zh"
+    ? {
+        title: title ?? (mode === "guestbook" ? "留言板" : "评论"),
+        description:
+          description ??
+          (mode === "guestbook"
+            ? "欢迎留下想说的话。"
+            : "欢迎交流想法，评论由 GitHub Discussions 托管。"),
+        load: mode === "guestbook" ? "加载留言板" : "点击加载评论",
+        loading: "正在加载...",
+        disabledTitle: mode === "guestbook" ? "留言板暂未启用" : "评论已关闭",
+        disabledBody:
+          mode === "guestbook"
+            ? "Giscus 配置完成后，这里会显示留言区。"
+            : "这篇文章关闭了评论。",
+        setupTitle: "Giscus 尚未配置",
+        setupBody:
+          "请在 src/data/site.ts 填写 GitHub Discussions 的 repoId、categoryId 等字段后再启用。",
+        missingPrefix: "缺少配置:",
+      }
+    : {
+        title: title ?? (mode === "guestbook" ? "Guestbook" : "Comments"),
+        description:
+          description ??
+          (mode === "guestbook"
+            ? "Leave a note here."
+            : "Comments are powered by GitHub Discussions."),
+        load:
+          mode === "guestbook" ? "Load guestbook" : "Click to load comments",
+        loading: "Loading...",
+        disabledTitle:
+          mode === "guestbook" ? "Guestbook is disabled" : "Comments disabled",
+        disabledBody:
+          mode === "guestbook"
+            ? "The guestbook will appear here after Giscus is configured."
+            : "Comments are disabled for this post.",
+        setupTitle: "Giscus is not configured",
+        setupBody:
+          "Fill the GitHub Discussions repoId, categoryId, and related fields in src/data/site.ts to enable it.",
+        missingPrefix: "Missing:",
+      };
+
+const giscusConfig = {
+  instanceId,
+  repo: giscus.repo,
+  repoId: giscus.repoId,
+  category,
+  categoryId,
+  mapping: giscus.mapping,
+  reactionsEnabled: giscus.reactionsEnabled,
+  inputPosition: giscus.inputPosition,
+  loading: giscus.loading,
+  lang,
+  loadText: copy.load,
+  loadingText: copy.loading,
+  canLoad,
+};
+---
+
+<section
+  class:list={["glass comments", mode === "guestbook" && "comments--guestbook"]}
+  data-pagefind-ignore
+>
+  <header class="comments__header">
+    <span class="comments__icon" aria-hidden="true">
+      <Icon
+        name={mode === "guestbook"
+          ? "mdi:book-open-page-variant-outline"
+          : "mdi:comment-text-outline"}
+        class="h-5 w-5"
+      />
+    </span>
+    <div>
+      <h2>{copy.title}</h2>
+      <p>{copy.description}</p>
+    </div>
+  </header>
+
+  {
+    canLoad ? (
+      <div
+        class="comments__loader"
+        data-giscus-root={instanceId}
+        data-giscus-ready="false"
+      >
+        <button class="comments__button" type="button" data-giscus-load>
+          <Icon name="mdi:github" class="h-5 w-5" />
+          <span data-giscus-button-text>{copy.load}</span>
+        </button>
+        <div class="comments__frame" data-giscus-frame />
+      </div>
+    ) : (
+      <div class="comments__disabled">
+        <Icon
+          name={enabled ? "mdi:wrench-outline" : "mdi:comment-off-outline"}
+          class="h-6 w-6"
+        />
+        <div>
+          <h3>{enabled ? copy.setupTitle : copy.disabledTitle}</h3>
+          <p>{enabled ? copy.setupBody : copy.disabledBody}</p>
+          {enabled && missing.length > 0 && (
+            <p class="comments__missing">
+              {copy.missingPrefix} {missing.join(", ")}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+</section>
+
+<script define:vars={{ giscusConfig }}>
+  if (giscusConfig.canLoad) {
+    const previousCleanup =
+      window.__blogGiscusCleanup?.[giscusConfig.instanceId];
+    if (typeof previousCleanup === "function") previousCleanup();
+
+    window.__blogGiscusCleanup = window.__blogGiscusCleanup ?? {};
+
+    const cleanups = [];
+    const root = document.querySelector(
+      `[data-giscus-root="${giscusConfig.instanceId}"]`,
+    );
+    let observer;
+
+    function addListener(target, event, handler, options) {
+      target.addEventListener(event, handler, options);
+      cleanups.push(() => target.removeEventListener(event, handler, options));
+    }
+
+    function currentTheme() {
+      return document.documentElement.getAttribute("data-theme") === "dark"
+        ? "dark"
+        : "light";
+    }
+
+    function updateGiscusTheme() {
+      const iframe = root?.querySelector("iframe.giscus-frame");
+      if (!(iframe instanceof HTMLIFrameElement) || !iframe.contentWindow)
+        return;
+      iframe.contentWindow.postMessage(
+        { giscus: { setConfig: { theme: currentTheme() } } },
+        "https://giscus.app",
+      );
+    }
+
+    function loadGiscus() {
+      if (!root || root.dataset.giscusReady === "true") return;
+
+      const button = root.querySelector("[data-giscus-load]");
+      const buttonText = root.querySelector("[data-giscus-button-text]");
+      const frame = root.querySelector("[data-giscus-frame]");
+      if (!frame) return;
+
+      root.dataset.giscusReady = "true";
+      if (button instanceof HTMLButtonElement) button.disabled = true;
+      if (buttonText) buttonText.textContent = giscusConfig.loadingText;
+
+      const script = document.createElement("script");
+      const attributes = {
+        src: "https://giscus.app/client.js",
+        "data-repo": giscusConfig.repo,
+        "data-repo-id": giscusConfig.repoId,
+        "data-category": giscusConfig.category,
+        "data-category-id": giscusConfig.categoryId,
+        "data-mapping": giscusConfig.mapping,
+        "data-strict": "0",
+        "data-reactions-enabled": giscusConfig.reactionsEnabled,
+        "data-emit-metadata": "0",
+        "data-input-position": giscusConfig.inputPosition,
+        "data-theme": currentTheme(),
+        "data-lang": giscusConfig.lang === "zh" ? "zh-CN" : "en",
+        "data-loading": giscusConfig.loading,
+        crossorigin: "anonymous",
+        async: "",
+      };
+
+      for (const [key, value] of Object.entries(attributes)) {
+        if (value !== undefined) script.setAttribute(key, value);
+      }
+
+      script.addEventListener("load", () => {
+        if (button instanceof HTMLButtonElement) button.remove();
+        updateGiscusTheme();
+      });
+
+      script.addEventListener("error", () => {
+        root.dataset.giscusReady = "false";
+        if (button instanceof HTMLButtonElement) button.disabled = false;
+        if (buttonText) buttonText.textContent = giscusConfig.loadText;
+      });
+
+      frame.append(script);
+    }
+
+    if (root) {
+      const button = root.querySelector("[data-giscus-load]");
+      if (button) addListener(button, "click", loadGiscus);
+
+      observer = new MutationObserver(updateGiscusTheme);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+    }
+
+    window.__blogGiscusCleanup[giscusConfig.instanceId] = () => {
+      cleanups.forEach((cleanup) => cleanup());
+      observer?.disconnect();
+    };
+
+    addListener(
+      document,
+      "astro:before-swap",
+      window.__blogGiscusCleanup[giscusConfig.instanceId],
+      { once: true },
+    );
+  }
+</script>
+
+<style>
+  .comments {
+    padding: 1.25rem;
+  }
+
+  .comments__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .comments__icon {
+    display: inline-flex;
+    width: 2.3rem;
+    height: 2.3rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: white;
+    background: rgb(var(--color-brand-600));
+  }
+
+  .comments h2,
+  .comments h3,
+  .comments p {
+    margin: 0;
+  }
+
+  .comments h2 {
+    color: rgb(var(--color-brand-700));
+    font-family: var(--font-serif, Georgia, serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  :global([data-theme="dark"]) .comments h2 {
+    color: rgb(var(--color-brand-300));
+  }
+
+  .comments__header p,
+  .comments__disabled p {
+    margin-top: 0.25rem;
+    color: rgb(var(--color-muted));
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
+  .comments__button {
+    display: inline-flex;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 1rem;
+    color: white;
+    background: rgb(var(--color-brand-600));
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .comments__button:hover {
+    background: rgb(var(--color-brand-700));
+    transform: translateY(-1px);
+  }
+
+  .comments__button:disabled {
+    cursor: wait;
+    opacity: 0.78;
+  }
+
+  .comments__frame {
+    margin-top: 1rem;
+  }
+
+  .comments__disabled {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 1px solid rgb(var(--glass-border) / 0.18);
+    border-radius: 0.85rem;
+    color: rgb(var(--color-muted));
+    background: rgb(var(--color-surface) / 0.28);
+  }
+
+  .comments__disabled h3 {
+    color: rgb(var(--color-ink));
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .comments__missing {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    overflow-wrap: anywhere;
+  }
+
+  .comments--guestbook {
+    padding: clamp(1.25rem, 4vw, 2rem);
+  }
+</style>

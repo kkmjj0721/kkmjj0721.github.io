@@ -1,0 +1,60 @@
+---
+import { getCollection } from "astro:content";
+import TrackingNav from "@components/collection/TrackingNav.astro";
+import TrackingShelf, {
+  type TrackingItem,
+} from "@components/collection/TrackingShelf.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+
+const statusOrder = ["watching", "done", "plan", "dropped"] as const;
+const statusLabels: Record<(typeof statusOrder)[number], string> = {
+  watching: "在看",
+  done: "已看完",
+  plan: "想看",
+  dropped: "搁置",
+};
+const collator = new Intl.Collator("zh-Hans-CN");
+
+const entries = (await getCollection("anime")).sort((a, b) => {
+  const statusDiff =
+    statusOrder.indexOf(a.data.status) - statusOrder.indexOf(b.data.status);
+  if (statusDiff !== 0) return statusDiff;
+  return (
+    (b.data.rating ?? -1) - (a.data.rating ?? -1) ||
+    collator.compare(a.data.title, b.data.title)
+  );
+});
+
+const items: TrackingItem[] = entries.map((entry) => ({
+  title: entry.data.title,
+  subtitle: entry.data.titleAlt,
+  status: entry.data.status,
+  statusLabel: statusLabels[entry.data.status],
+  rating: entry.data.rating,
+  cover: entry.data.cover,
+  meta: [
+    entry.data.year ? `${entry.data.year}` : undefined,
+    entry.data.episodes ? `${entry.data.episodes} 集` : undefined,
+  ].filter(Boolean) as string[],
+  tags: entry.data.tags,
+  links: entry.data.bangumiUrl
+    ? [{ label: "Bangumi", href: entry.data.bangumiUrl }]
+    : [],
+}));
+
+const filters = statusOrder.map((value) => ({
+  value,
+  label: statusLabels[value],
+  count: items.filter((item) => item.status === value).length,
+}));
+---
+
+<PageLayout title="番剧追踪" description="正在看、想看和已看完的番剧记录。">
+  <TrackingNav current="anime" />
+  <TrackingShelf
+    items={items}
+    filters={filters}
+    emptyTitle="番剧列表还没有内容"
+    emptyDescription="在 src/content/anime/ 下添加 Markdown 或 MDX 条目后，这里会自动显示状态筛选、评分和标签。"
+  />
+</PageLayout>

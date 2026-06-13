@@ -1,0 +1,65 @@
+---
+import { getCollection } from "astro:content";
+import TrackingNav from "@components/collection/TrackingNav.astro";
+import TrackingShelf, {
+  type TrackingItem,
+} from "@components/collection/TrackingShelf.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+
+const statusOrder = [
+  "playing",
+  "done",
+  "owned",
+  "wishlist",
+  "dropped",
+] as const;
+const statusLabels: Record<(typeof statusOrder)[number], string> = {
+  playing: "游玩中",
+  done: "已通关",
+  owned: "库存",
+  wishlist: "愿望单",
+  dropped: "搁置",
+};
+const collator = new Intl.Collator("zh-Hans-CN");
+
+const entries = (await getCollection("games")).sort((a, b) => {
+  const statusDiff =
+    statusOrder.indexOf(a.data.status) - statusOrder.indexOf(b.data.status);
+  if (statusDiff !== 0) return statusDiff;
+  return (
+    (b.data.rating ?? -1) - (a.data.rating ?? -1) ||
+    collator.compare(a.data.title, b.data.title)
+  );
+});
+
+const items: TrackingItem[] = entries.map((entry) => ({
+  title: entry.data.title,
+  status: entry.data.status,
+  statusLabel: statusLabels[entry.data.status],
+  rating: entry.data.rating,
+  cover: entry.data.cover,
+  meta: [
+    entry.data.platform,
+    typeof entry.data.hoursPlayed === "number"
+      ? `${entry.data.hoursPlayed} 小时`
+      : undefined,
+  ].filter(Boolean) as string[],
+  tags: entry.data.tags,
+}));
+
+const filters = statusOrder.map((value) => ({
+  value,
+  label: statusLabels[value],
+  count: items.filter((item) => item.status === value).length,
+}));
+---
+
+<PageLayout title="游戏记录" description="游戏平台、游玩状态、时长和评分记录。">
+  <TrackingNav current="games" />
+  <TrackingShelf
+    items={items}
+    filters={filters}
+    emptyTitle="游戏列表还没有内容"
+    emptyDescription="在 src/content/games/ 下添加 Markdown 或 MDX 条目后，这里会自动生成可筛选的游戏记录。"
+  />
+</PageLayout>

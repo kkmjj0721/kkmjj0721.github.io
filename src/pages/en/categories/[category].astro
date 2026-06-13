@@ -1,0 +1,18 @@
+---
+import type { GetStaticPaths } from "astro";
+import CategoryPage from "../../categories/[category].astro";
+import { getPublishedPosts, groupByCategory } from "@utils/posts";
+
+export const getStaticPaths = (async () => {
+  const all = await getPublishedPosts("en");
+  const grouped = groupByCategory(all);
+  return Object.entries(grouped).map(([category, posts]) => ({
+    params: { category },
+    props: { posts },
+  }));
+}) satisfies GetStaticPaths;
+
+const { posts } = Astro.props;
+---
+
+<CategoryPage posts={posts} />

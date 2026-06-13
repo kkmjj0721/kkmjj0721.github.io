@@ -1,0 +1,18 @@
+---
+import type { GetStaticPaths } from "astro";
+import TagPage from "../../tags/[tag].astro";
+import { getPublishedPosts, groupByTag } from "@utils/posts";
+
+export const getStaticPaths = (async () => {
+  const all = await getPublishedPosts("en");
+  const grouped = groupByTag(all);
+  return Object.entries(grouped).map(([tag, posts]) => ({
+    params: { tag },
+    props: { posts },
+  }));
+}) satisfies GetStaticPaths;
+
+const { posts } = Astro.props;
+---
+
+<TagPage posts={posts} />

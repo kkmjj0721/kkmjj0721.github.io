@@ -7,6 +7,12 @@
 - validation:
   - npm_run_lint: PASS
   - npm_run_build: PASS
+  - npm_run_check_images_allow_placeholders: PASS
+  - node_check_scripts_mjs: PASS
+  - git_diff_check: PASS
+  - route_link_scan: PASS
+  - pagefind_artifact_check: PASS
+  - forbidden_ghchart_rshah_scan: PASS
   - final_gate: "[ALL_TESTS_PASSED]"
 - git_metadata: unavailable_in_workspace_view
 
@@ -33,11 +39,20 @@
 - header_surface: `src/components/layout/Header.astro` rebinds event handlers on `astro:page-load` for Astro ClientRouter compatibility
 - tooling_surface: ESLint 9 flat config is active in `eslint.config.mjs`
 - content_surface: demo/article showcase content exists for Phase 3 validation
+- release_handoff_completion_2026_06_13: unfinished HANDOFF/README work was completed for module pages, English route wrappers, Pagefind search modal, guarded Giscus comments/guestbook, helper scripts, and CI/deploy workflows
+- release_handoff_interface_2026_06_13: module pages now include zh/en routes for about, archives, categories, friends, gallery, moments, projects, tags, tracking, privacy, guestbook, and post indexes; English wrappers mirror the Chinese route surface
+- release_handoff_search_comments_2026_06_13: the home dashboard now opens a Pagefind-backed search modal, and post/guestbook comment entry points are guarded through the shared Comments component
+- release_handoff_tooling_2026_06_13: new scripts cover image checks/compression, font subsetting, and content scaffolding; CI/deploy workflows now run lint/build and publish the site artifact through GitHub Pages
+- release_handoff_validation_2026_06_13: verification passed for `npm run lint`, `npm run build`, `npm run check:images -- --allow-placeholders`, `node --check scripts/*.mjs`, `git diff --check`, route/link scan, pagefind artifact check, and forbidden `ghchart`/`rshah` scan
 
 ## Residual Warnings
 
 - comment_system: still placeholder-only, planned for later Phase 6 integration
 - site_search: search UI remains placeholder-only, planned for later Phase 6 integration
+- content_dirs: some content collection directories remain empty or missing until content is added
+- pagefind_warning: large chunks and Pagefind zh stemming warnings remain non-blocking
+- image_placeholders: placeholder markers remain allowed by policy for now
+- external_integrations: real Giscus, social, email, and private asset values still require user-provided configuration
 - homepage_background_video_warnings: non-blocking warnings observed for missing content directories, large chunks over 500k, and Pagefind Chinese stemming/body index notices
 - generated_artifacts: `dist/` is present locally but is not the source of truth
 - git_status: commit and status output could not be produced from this workspace because git metadata was not available

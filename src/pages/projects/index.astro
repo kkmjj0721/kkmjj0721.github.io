@@ -1,0 +1,193 @@
+---
+import { getCollection } from "astro:content";
+import EmptyState from "@components/collection/EmptyState.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+import { getLangFromUrl } from "@i18n/ui";
+import { formatDate } from "@utils/posts";
+
+const lang = getLangFromUrl(Astro.url);
+const projects = (await getCollection("projects")).sort((a, b) => {
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  return (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0);
+});
+const projectsWithContent = await Promise.all(
+  projects.map(async (project) => {
+    const { Content } = await project.render();
+    return { project, Content };
+  }),
+);
+const featured = projectsWithContent.filter(
+  ({ project }) => project.data.featured,
+);
+const regular = projectsWithContent.filter(
+  ({ project }) => !project.data.featured,
+);
+const fallbackCover = "/images/placeholders/og-default.placeholder.svg";
+
+const statusLabels = {
+  active: "进行中",
+  maintenance: "维护中",
+  archived: "已归档",
+} as const;
+---
+
+<PageLayout title="项目" description="正在维护的作品、实验和工具。">
+  {
+    projectsWithContent.length === 0 ? (
+      <EmptyState
+        title="项目列表还没有内容"
+        description="在 src/content/projects/ 下添加 Markdown 或 MDX 条目后，精选项目会自动置顶展示。"
+      />
+    ) : (
+      <div class="space-y-10">
+        {featured.length > 0 && (
+          <section>
+            <h2 class="mb-4 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300">
+              精选项目
+            </h2>
+            <div class="grid gap-5">
+              {featured.map(({ project, Content }) => (
+                <article class="glass glass-hover overflow-hidden md:grid md:grid-cols-[minmax(220px,0.9fr)_1.2fr]">
+                  <img
+                    src={project.data.cover ?? fallbackCover}
+                    alt={project.data.name}
+                    loading="lazy"
+                    class="h-full min-h-52 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <div class="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span class="rounded-full bg-brand-500/15 px-2.5 py-1 font-semibold text-brand-700 dark:text-brand-300">
+                        {statusLabels[project.data.status]}
+                      </span>
+                      {project.data.date && (
+                        <time datetime={project.data.date.toISOString()}>
+                          {formatDate(project.data.date, lang)}
+                        </time>
+                      )}
+                    </div>
+                    <h3 class="font-serif text-2xl font-semibold text-ink">
+                      {project.data.name}
+                    </h3>
+                    {project.data.description && (
+                      <p class="mt-2 text-sm leading-relaxed text-muted">
+                        {project.data.description}
+                      </p>
+                    )}
+                    <div class="prose prose-slate mt-4 max-w-none dark:prose-invert">
+                      <Content />
+                    </div>
+                    {project.data.tech.length > 0 && (
+                      <div class="mt-4 flex flex-wrap gap-2">
+                        {project.data.tech.map((tech) => (
+                          <span class="rounded-full bg-brand-100/50 px-2.5 py-1 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div class="mt-5 flex flex-wrap gap-2">
+                      {project.data.url && (
+                        <a
+                          href={project.data.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          class="glass-pill px-4 py-2 text-sm font-semibold"
+                        >
+                          访问
+                        </a>
+                      )}
+                      {project.data.repo && (
+                        <a
+                          href={project.data.repo}
+                          target="_blank"
+                          rel="noreferrer"
+                          class="glass-pill px-4 py-2 text-sm font-semibold"
+                        >
+                          源码
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {regular.length > 0 && (
+          <section>
+            <h2 class="mb-4 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300">
+              全部项目
+            </h2>
+            <div class="grid gap-4 sm:grid-cols-2">
+              {regular.map(({ project, Content }) => (
+                <article class="glass glass-hover overflow-hidden">
+                  <img
+                    src={project.data.cover ?? fallbackCover}
+                    alt={project.data.name}
+                    loading="lazy"
+                    class="aspect-[16/9] w-full object-cover"
+                  />
+                  <div class="p-5">
+                    <div class="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span class="rounded-full bg-brand-500/15 px-2.5 py-1 font-semibold text-brand-700 dark:text-brand-300">
+                        {statusLabels[project.data.status]}
+                      </span>
+                      {project.data.date && (
+                        <time datetime={project.data.date.toISOString()}>
+                          {formatDate(project.data.date, lang)}
+                        </time>
+                      )}
+                    </div>
+                    <h3 class="font-serif text-xl font-semibold text-ink">
+                      {project.data.name}
+                    </h3>
+                    {project.data.description && (
+                      <p class="mt-2 text-sm leading-relaxed text-muted">
+                        {project.data.description}
+                      </p>
+                    )}
+                    <div class="prose prose-slate mt-4 max-w-none dark:prose-invert">
+                      <Content />
+                    </div>
+                    {project.data.tech.length > 0 && (
+                      <div class="mt-4 flex flex-wrap gap-2">
+                        {project.data.tech.slice(0, 6).map((tech) => (
+                          <span class="rounded-full bg-brand-100/50 px-2 py-0.5 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div class="mt-5 flex flex-wrap gap-2">
+                      {project.data.url && (
+                        <a
+                          href={project.data.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          class="rounded-full border border-brand-200/70 px-3 py-1 text-xs font-semibold hover:border-brand-500 hover:bg-brand-100/50 dark:border-white/10 dark:hover:bg-white/10"
+                        >
+                          访问
+                        </a>
+                      )}
+                      {project.data.repo && (
+                        <a
+                          href={project.data.repo}
+                          target="_blank"
+                          rel="noreferrer"
+                          class="rounded-full border border-brand-200/70 px-3 py-1 text-xs font-semibold hover:border-brand-500 hover:bg-brand-100/50 dark:border-white/10 dark:hover:bg-white/10"
+                        >
+                          源码
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    )
+  }
+</PageLayout>

@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content";
+import TrackingNav from "@components/collection/TrackingNav.astro";
+import TrackingShelf, {
+  type TrackingItem,
+} from "@components/collection/TrackingShelf.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+
+const statusOrder = ["watched", "plan", "dropped"] as const;
+const statusLabels: Record<(typeof statusOrder)[number], string> = {
+  watched: "已看",
+  plan: "想看",
+  dropped: "搁置",
+};
+const collator = new Intl.Collator("zh-Hans-CN");
+
+const entries = (await getCollection("movies")).sort((a, b) => {
+  const statusDiff =
+    statusOrder.indexOf(a.data.status) - statusOrder.indexOf(b.data.status);
+  if (statusDiff !== 0) return statusDiff;
+  return (
+    (b.data.rating ?? -1) - (a.data.rating ?? -1) ||
+    collator.compare(a.data.title, b.data.title)
+  );
+});
+
+const items: TrackingItem[] = entries.map((entry) => ({
+  title: entry.data.title,
+  subtitle: entry.data.director,
+  status: entry.data.status,
+  statusLabel: statusLabels[entry.data.status],
+  rating: entry.data.rating,
+  cover: entry.data.cover,
+  meta: [entry.data.year ? `${entry.data.year}` : undefined].filter(
+    Boolean,
+  ) as string[],
+  tags: entry.data.tags,
+}));
+
+const filters = statusOrder.map((value) => ({
+  value,
+  label: statusLabels[value],
+  count: items.filter((item) => item.status === value).length,
+}));
+---
+
+<PageLayout title="电影记录" description="看过、想看和搁置的影视记录。">
+  <TrackingNav current="movies" />
+  <TrackingShelf
+    items={items}
+    filters={filters}
+    emptyTitle="电影列表还没有内容"
+    emptyDescription="在 src/content/movies/ 下添加 Markdown 或 MDX 条目后，这里会自动生成可筛选的影视记录。"
+  />
+</PageLayout>

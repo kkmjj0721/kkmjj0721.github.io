@@ -1,0 +1,30 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import Comments from "@components/post/Comments.astro";
+import { getLangFromUrl } from "@i18n/ui";
+
+const lang = getLangFromUrl(Astro.url);
+const title = lang === "zh" ? "留言板" : "Guestbook";
+const description =
+  lang === "zh"
+    ? "留下你的问候、建议或一段路过的文字。"
+    : "Leave a note, a suggestion, or a passing hello.";
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div class="space-y-3">
+      <p
+        class="text-sm font-semibold uppercase tracking-normal text-brand-700 dark:text-brand-300"
+      >
+        {title}
+      </p>
+      <h1 class="font-serif text-3xl font-bold leading-tight md:text-4xl">
+        {title}
+      </h1>
+      <p class="max-w-2xl text-muted leading-relaxed">{description}</p>
+    </div>
+
+    <Comments mode="guestbook" lang={lang} />
+  </section>
+</BaseLayout>

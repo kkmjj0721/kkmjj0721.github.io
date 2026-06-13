@@ -1,0 +1,146 @@
+---
+import { Icon } from "astro-icon/components";
+import PageLayout from "@layouts/PageLayout.astro";
+import { site } from "@data/site";
+import { getLangFromUrl } from "@i18n/ui";
+
+const lang = getLangFromUrl(Astro.url);
+const socials = site.social.filter((item) => item.show);
+const github = site.social.find((item) => item.name === "GitHub");
+const githubUser = github?.url.split("/").filter(Boolean).pop() ?? "kkmjj0721";
+
+const skills = [
+  { name: "Astro / TypeScript", value: 88 },
+  { name: "Frontend UI", value: 82 },
+  { name: "Content Systems", value: 78 },
+  { name: "Automation", value: 70 },
+];
+
+const badges = ["长期主义", "内容优先", "轻量工具", "持续记录"];
+---
+
+<PageLayout title="关于" description={site.author.bio[lang]}>
+  <div class="grid gap-8 lg:grid-cols-[260px_1fr]">
+    <aside class="lg:sticky lg:top-24 lg:self-start">
+      <div class="text-center">
+        <img
+          src={site.author.avatar}
+          alt={site.author.name[lang]}
+          class="mx-auto h-28 w-28 rounded-full object-cover ring-4 ring-brand-200/60"
+        />
+        <h2 class="mt-4 font-serif text-2xl font-semibold text-ink">
+          {site.author.name[lang]}
+        </h2>
+        <p class="mt-1 text-sm text-muted">{site.author.nameAlias[lang]}</p>
+        <div class="mt-5 flex flex-wrap justify-center gap-2">
+          {
+            socials.map((item) => (
+              <a
+                href={item.url}
+                target={item.url.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
+                aria-label={item.name}
+                class="rounded-full bg-brand-100/50 p-2 text-brand-700 hover:bg-brand-200/70 dark:bg-brand-900/30 dark:text-brand-200"
+              >
+                <Icon name={item.icon} class="h-5 w-5" />
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </aside>
+
+    <div class="space-y-8">
+      <section>
+        <h2
+          class="mb-3 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+        >
+          简介
+        </h2>
+        <p class="text-base leading-8 text-ink">{site.author.bio[lang]}</p>
+        <p class="mt-3 text-sm leading-7 text-muted">
+          这里会记录代码实践、生活片段、摄影整理，以及番剧、游戏、读书和电影的个人清单。内容保持轻量，页面保持安静，方便之后持续扩展。
+        </p>
+      </section>
+
+      <section>
+        <h2
+          class="mb-4 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+        >
+          技能
+        </h2>
+        <div class="space-y-4">
+          {
+            skills.map((skill) => (
+              <div>
+                <div class="mb-1 flex items-center justify-between text-sm">
+                  <span class="font-semibold text-ink">{skill.name}</span>
+                  <span class="font-mono text-xs text-muted">
+                    {skill.value}%
+                  </span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-brand-100/70 dark:bg-white/10">
+                  <span
+                    class="block h-full rounded-full bg-brand-500"
+                    style={`width: ${skill.value}%`}
+                  />
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section>
+        <h2
+          class="mb-4 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+        >
+          徽章
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {
+            badges.map((badge) => (
+              <span class="glass-pill px-4 py-2 text-sm font-semibold text-ink">
+                {badge}
+              </span>
+            ))
+          }
+        </div>
+      </section>
+
+      <section>
+        <h2
+          class="mb-4 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+        >
+          GitHub
+        </h2>
+        <a
+          href={github?.url ?? "#"}
+          target="_blank"
+          rel="noreferrer"
+          class="glass-soft group block p-5 transition-colors hover:bg-brand-100/40 dark:hover:bg-white/10"
+        >
+          <span class="flex items-center gap-4">
+            <span
+              class="flex h-12 w-12 items-center justify-center rounded-full bg-brand-500 text-white"
+            >
+              <Icon name="mdi:github" class="h-6 w-6" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block font-serif text-xl font-semibold text-ink">
+                @{githubUser}
+              </span>
+              <span class="mt-1 block text-sm leading-relaxed text-muted">
+                点击后前往 GitHub 个人主页；本站不会自动加载第三方贡献图。
+              </span>
+            </span>
+            <Icon
+              name="mdi:arrow-top-right"
+              class="h-5 w-5 flex-shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </span>
+        </a>
+      </section>
+    </div>
+  </div>
+</PageLayout>

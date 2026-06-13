@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
+import SearchModal from "@components/search/SearchModal.astro";
 import { site } from "@data/site";
 import { getLangFromUrl, localizedPath, useTranslations } from "@i18n/ui";
 import { formatDate, getPublishedPosts, postUrl } from "@utils/posts";
@@ -145,28 +146,26 @@ const moduleCards = [
         class="home-dashboard__utility"
         aria-label={t("home.dashboard.stats")}
       >
-        <form
-          class="glass search-panel"
-          action={localizedPath("/posts/", lang)}
-          method="get"
-        >
-          <label for="home-search" class="home-eyebrow"
-            >{t("home.dashboard.searchLabel")}</label
+        <div class="glass search-panel">
+          <p id="home-search-label" class="home-eyebrow">
+            {t("home.dashboard.searchLabel")}
+          </p>
+          <button
+            class="search-panel__field"
+            type="button"
+            data-search-open
+            aria-labelledby="home-search-label"
+            aria-controls="site-search-modal"
           >
-          <div class="search-panel__field">
             <Icon name="mdi:magnify" class="h-5 w-5" />
-            <input
-              id="home-search"
-              type="search"
-              name="q"
-              placeholder={site.title[lang]}
-              autocomplete="off"
-            />
-            <button type="submit" aria-label={t("common.search")}>
+            <span class="search-panel__placeholder">
+              {t("home.dashboard.searchPlaceholder")}
+            </span>
+            <span class="search-panel__action" aria-hidden="true">
               <Icon name="mdi:arrow-right" class="h-5 w-5" />
-            </button>
-          </div>
-        </form>
+            </span>
+          </button>
+        </div>
 
         <div class="stats-grid">
           {
@@ -263,6 +262,8 @@ const moduleCards = [
   </div>
 </section>
 
+<SearchModal lang={lang} placeholder={t("home.dashboard.searchPlaceholder")} />
+
 <style>
   .home-dashboard {
     --home-ink: 15 23 42;
@@ -331,7 +332,12 @@ const moduleCards = [
         rgb(254 202 202 / 0.5),
         transparent 34rem
       ),
-      linear-gradient(135deg, rgb(248 250 252), rgb(226 232 240) 48%, rgb(241 245 249));
+      linear-gradient(
+        135deg,
+        rgb(248 250 252),
+        rgb(226 232 240) 48%,
+        rgb(241 245 249)
+      );
     transition: opacity 0.35s ease;
   }
 
@@ -460,7 +466,7 @@ const moduleCards = [
   .primary-action,
   .secondary-action,
   .home-dashboard__socials a,
-  .search-panel button,
+  .search-panel__action,
   .section-heading a {
     display: inline-flex;
     align-items: center;
@@ -566,6 +572,7 @@ const moduleCards = [
   .search-panel__field {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
+    width: 100%;
     align-items: center;
     gap: 0.6rem;
     min-height: 3rem;
@@ -574,31 +581,32 @@ const moduleCards = [
     border-radius: 999px;
     background: rgb(var(--home-field) / 0.35);
     color: rgb(var(--home-muted));
+    cursor: pointer;
+    text-align: left;
   }
 
-  .search-panel input {
-    width: 100%;
+  .search-panel__field:hover {
+    background: rgb(var(--home-field) / 0.48);
+  }
+
+  .search-panel__placeholder {
+    display: block;
     min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
     color: rgb(var(--home-ink));
-    font: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .search-panel input::placeholder {
-    color: rgb(var(--home-muted) / 0.76);
-  }
-
-  .search-panel button {
+  .search-panel__action {
     width: 2.5rem;
+    min-height: 2.5rem;
     border: 0;
     color: white;
     background: rgb(var(--color-brand-600));
-    cursor: pointer;
   }
 
-  .search-panel button:hover {
+  .search-panel__field:hover .search-panel__action {
     background: rgb(var(--color-brand-700));
   }
 

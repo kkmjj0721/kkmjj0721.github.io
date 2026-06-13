@@ -1,0 +1,56 @@
+---
+import PageLayout from "@layouts/PageLayout.astro";
+---
+
+<PageLayout title="隐私" description="本站的数据使用与本地偏好保存说明。">
+  <div class="space-y-8 text-sm leading-7 text-muted">
+    <section>
+      <h2
+        class="mb-3 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+      >
+        我们保存什么
+      </h2>
+      <p>
+        本站会使用 localStorage
+        在你的浏览器中保存主题、主色和语言偏好。这些数据只保存在当前设备上，不会上传到服务器。
+      </p>
+    </section>
+
+    <section>
+      <h2
+        class="mb-3 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+      >
+        我们不收集什么
+      </h2>
+      <p>
+        当前站点没有接入统计分析、广告追踪、登录系统或自建评论数据库。静态页面访问由
+        GitHub Pages 托管，相关访问日志遵循 GitHub 的服务规则。
+      </p>
+    </section>
+
+    <section>
+      <h2
+        class="mb-3 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+      >
+        第三方内容
+      </h2>
+      <p>
+        如果后续启用 Giscus
+        评论、外部视频嵌入或第三方图片，这些服务可能会按各自的隐私政策处理请求。相关功能会尽量采用懒加载或点击后加载。
+      </p>
+    </section>
+
+    <section>
+      <h2
+        class="mb-3 font-serif text-2xl font-semibold text-brand-700 dark:text-brand-300"
+      >
+        English Summary
+      </h2>
+      <p>
+        This site stores theme, brand color, and language preferences locally in
+        your browser. It currently does not run analytics, ads, accounts, or a
+        self-hosted comment database.
+      </p>
+    </section>
+  </div>
+</PageLayout>

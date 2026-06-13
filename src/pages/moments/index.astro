@@ -1,0 +1,71 @@
+---
+import { getCollection } from "astro:content";
+import EmptyState from "@components/collection/EmptyState.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+import { getLangFromUrl } from "@i18n/ui";
+import { formatDate } from "@utils/posts";
+
+const lang = getLangFromUrl(Astro.url);
+const moments = (
+  await getCollection("moments", ({ data }) => data.visibility === "public")
+).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const momentsWithContent = await Promise.all(
+  moments.map(async (moment) => {
+    const { Content } = await moment.render();
+    return { moment, Content };
+  }),
+);
+---
+
+<PageLayout title="说说" description="一些短动态、近况和碎片想法。">
+  {
+    momentsWithContent.length === 0 ? (
+      <EmptyState
+        title="还没有公开动态"
+        description="在 src/content/moments/ 下添加 Markdown 或 MDX 条目后，公开动态会按时间倒序显示在这里。"
+      />
+    ) : (
+      <div class="space-y-5">
+        {momentsWithContent.map(({ moment, Content }) => (
+          <article class="glass glass-hover p-5 md:p-6">
+            <div class="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted">
+              <time datetime={moment.data.date.toISOString()}>
+                {formatDate(moment.data.date, lang)}
+              </time>
+              {moment.data.mood && (
+                <span class="rounded-full bg-brand-500/15 px-2.5 py-1 text-brand-700 dark:text-brand-300">
+                  {moment.data.mood}
+                </span>
+              )}
+              {moment.data.location && <span>{moment.data.location}</span>}
+            </div>
+
+            <div class="prose prose-slate max-w-none dark:prose-invert">
+              <Content />
+            </div>
+
+            {moment.data.images.length > 0 && (
+              <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {moment.data.images.map((image) => (
+                  <a
+                    href={image}
+                    target="_blank"
+                    rel="noreferrer"
+                    class="overflow-hidden rounded-xl bg-brand-100/30 dark:bg-white/5"
+                  >
+                    <img
+                      src={image}
+                      alt={`${formatDate(moment.data.date, lang)} 的动态图片`}
+                      loading="lazy"
+                      class="aspect-[4/3] w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                    />
+                  </a>
+                ))}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    )
+  }
+</PageLayout>
