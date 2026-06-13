@@ -32,6 +32,10 @@
 - homepage_navigation_validation_2026_06_13: verification passed with `npm run lint` and `npm run build`; build emitted only known non-blocking warnings for missing content directories, large chunks, and Pagefind Chinese stemming/body index notices
 - homepage_theme_surface_release_2026_06_13: `src/components/layout/Header.astro` now uses day/night frosted-glass styling with light mode `bg-white/70 text-slate-950 backdrop-blur-xl` and dark mode `dark:bg-slate-950/60 dark:text-white`; header controls remain limited to navigation and mobile menu
 - homepage_background_theme_release_2026_06_13: `src/components/home/HomeDashboard.astro` now switches the home background by theme, using a day-mode placeholder surface and the existing video background in dark mode via `html[data-theme="dark"]`; the home text/panel tokens were adjusted to keep contrast readable in both themes
+- homepage_theme_surface_mode_switch_2026_06_13: header and home glass surfaces now switch strictly by `html[data-theme]`; light mode uses white glass with dark text, and dark mode uses black glass with light text
+- homepage_background_theme_video_switch_2026_06_13: homepage background now switches by theme, with light/day using `/images/backgrounds/tomori.mp4` and dark/night keeping `/images/backgrounds/友利奈绪动态壁纸.mp4`
+- homepage_video_loading_fix_2026_06_13: `src/components/home/HomeDashboard.astro` now renders one unsourced video with `preload="none"` and JS-managed `data-src-light` / `data-src-dark` switching so only the active theme source is attached and playing
+- homepage_theme_verification_2026_06_13: verification passed for `npm run lint`, `npm run build`, `git diff --check`, source/dist checks for one video with no static `src`, both asset paths present, and `tomori.mp4` existing; build warnings remain non-blocking
 - en_home_hidefooter_release_2026_06_13: `src/pages/en/index.astro` now passes `hideFooter` to `BaseLayout`, keeping the English home page single-screen
 - homepage_theme_validation_2026_06_13: independent verification passed with `npm run lint` PASS and `npm run build` PASS; header no longer exposes search/theme/language/color controls, both Chinese and English home pages remain single-screen, and build warnings stayed non-blocking
 - post_surface: `src/layouts/PostLayout.astro` now includes TOC scrollspy, KaTeX CSS support, Mermaid lazy render, reading progress, and series sidebar support
@@ -51,6 +55,7 @@
 - site_search: search UI remains placeholder-only, planned for later Phase 6 integration
 - content_dirs: some content collection directories remain empty or missing until content is added
 - pagefind_warning: large chunks and Pagefind zh stemming warnings remain non-blocking
+- homepage_theme_warning_2026_06_13: build still emits existing nonfatal content collection and large chunk warnings
 - image_placeholders: placeholder markers remain allowed by policy for now
 - external_integrations: real Giscus, social, email, and private asset values still require user-provided configuration
 - homepage_background_video_warnings: non-blocking warnings observed for missing content directories, large chunks over 500k, and Pagefind Chinese stemming/body index notices

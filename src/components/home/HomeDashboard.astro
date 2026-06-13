@@ -43,7 +43,8 @@ const daysOnline = Number.isFinite(startedAtMs)
 
 const visibleSocial = site.social.filter((item) => item.show);
 const trackingCount = animeCount + gameCount + bookCount + movieCount;
-const backgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
+const lightBackgroundVideo = "/images/backgrounds/tomori.mp4";
+const darkBackgroundVideo = "/images/backgrounds/友利奈绪动态壁纸.mp4";
 
 const stats = [
   { value: posts.length, label: t("home.dashboard.stat.posts") },
@@ -92,13 +93,15 @@ const moduleCards = [
   <div class="home-dashboard__media" aria-hidden="true">
     <div class="home-dashboard__placeholder"></div>
     <video
-      class="home-dashboard__video"
-      src={backgroundVideo}
+      class="home-dashboard__video home-dashboard__video--light"
+      data-home-background-video
+      data-src-light={lightBackgroundVideo}
+      data-src-dark={darkBackgroundVideo}
       autoplay
       muted
       loop
       playsinline
-      preload="metadata"></video>
+      preload="none"></video>
     <div class="home-dashboard__overlay"></div>
   </div>
 
@@ -264,6 +267,98 @@ const moduleCards = [
 
 <SearchModal lang={lang} placeholder={t("home.dashboard.searchPlaceholder")} />
 
+<script>
+  declare global {
+    interface Window {
+      __homeDashboardVideoController?: AbortController;
+      __homeDashboardVideoObserver?: MutationObserver;
+      __homeDashboardVideoPageLoadBound?: boolean;
+    }
+  }
+
+  const initHomeDashboardVideo = () => {
+    window.__homeDashboardVideoController?.abort();
+    window.__homeDashboardVideoObserver?.disconnect();
+
+    const video = document.querySelector<HTMLVideoElement>(
+      "[data-home-background-video]",
+    );
+
+    if (!video) {
+      return;
+    }
+
+    const controller = new AbortController();
+    window.__homeDashboardVideoController = controller;
+    const { signal } = controller;
+    const root = document.documentElement;
+
+    const removeVideoSource = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    const syncVideoSource = () => {
+      const theme = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const nextSrc =
+        theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
+
+      video.classList.toggle("home-dashboard__video--dark", theme === "dark");
+      video.classList.toggle("home-dashboard__video--light", theme !== "dark");
+
+      if (!nextSrc) {
+        video.classList.remove("is-video-ready");
+        removeVideoSource();
+        return;
+      }
+
+      if (video.getAttribute("src") !== nextSrc) {
+        video.classList.remove("is-video-ready");
+        removeVideoSource();
+        video.setAttribute("src", nextSrc);
+        video.load();
+      }
+
+      void video.play().catch(() => {
+        video.classList.remove("is-video-ready");
+      });
+    };
+
+    video.addEventListener(
+      "loadeddata",
+      () => {
+        video.classList.add("is-video-ready");
+      },
+      { signal },
+    );
+
+    video.addEventListener(
+      "error",
+      () => {
+        video.classList.remove("is-video-ready");
+      },
+      { signal },
+    );
+
+    const observer = new MutationObserver(syncVideoSource);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    window.__homeDashboardVideoObserver = observer;
+
+    syncVideoSource();
+  };
+
+  initHomeDashboardVideo();
+
+  if (!window.__homeDashboardVideoPageLoadBound) {
+    document.addEventListener("astro:page-load", initHomeDashboardVideo);
+    window.__homeDashboardVideoPageLoadBound = true;
+  }
+</script>
+
 <style>
   .home-dashboard {
     --home-ink: 15 23 42;
@@ -277,6 +372,9 @@ const moduleCards = [
     --home-item: 255 255 255;
     --home-pill: 241 245 249;
     --home-fallback-panel: 255 255 255;
+    --home-glass-alpha: 0.66;
+    --home-glass-strong-alpha: 0.76;
+    --home-glass-hover-alpha: 0.82;
 
     position: relative;
     isolation: isolate;
@@ -292,14 +390,17 @@ const moduleCards = [
     --home-ink: 255 255 255;
     --home-muted: 226 232 240;
     --home-soft: 203 213 225;
-    --home-panel: 255 255 255;
+    --home-panel: 2 6 23;
     --home-border: 255 255 255;
     --home-shadow: 0 0 0;
     --home-surface-wash: 15 23 42;
     --home-field: 15 23 42;
     --home-item: 15 23 42;
     --home-pill: 15 23 42;
-    --home-fallback-panel: 15 23 42;
+    --home-fallback-panel: 2 6 23;
+    --home-glass-alpha: 0.58;
+    --home-glass-strong-alpha: 0.68;
+    --home-glass-hover-alpha: 0.74;
   }
 
   .home-dashboard__media {
@@ -352,23 +453,28 @@ const moduleCards = [
     transition: opacity 0.35s ease;
   }
 
+  .home-dashboard__video--light.is-video-ready {
+    opacity: 0.88;
+    filter: saturate(1.04) contrast(0.98) brightness(1.04);
+  }
+
   .home-dashboard__overlay {
     position: absolute;
     inset: 0;
     background:
       linear-gradient(
         180deg,
-        rgb(2 6 23 / 0.74) 0%,
-        rgb(15 23 42 / 0.32) 42%,
-        rgb(2 6 23 / 0.82) 100%
+        rgb(255 255 255 / 0.72) 0%,
+        rgb(255 255 255 / 0.42) 42%,
+        rgb(248 250 252 / 0.78) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(2 6 23 / 0.38),
-        rgb(2 6 23 / 0.08) 50%,
-        rgb(2 6 23 / 0.42)
+        rgb(255 255 255 / 0.62),
+        rgb(255 255 255 / 0.14) 50%,
+        rgb(255 255 255 / 0.58)
       );
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.35s ease;
   }
 
@@ -386,11 +492,28 @@ const moduleCards = [
     opacity: 0;
   }
 
-  :global(html[data-theme="dark"]) .home-dashboard__video {
+  :global(html[data-theme="dark"]) .home-dashboard__video--light {
+    opacity: 0;
+  }
+
+  :global(html[data-theme="dark"]) .home-dashboard__video--dark.is-video-ready {
     opacity: 0.82;
   }
 
   :global(html[data-theme="dark"]) .home-dashboard__overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(2 6 23 / 0.74) 0%,
+        rgb(15 23 42 / 0.32) 42%,
+        rgb(2 6 23 / 0.82) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgb(2 6 23 / 0.38),
+        rgb(2 6 23 / 0.08) 50%,
+        rgb(2 6 23 / 0.42)
+      );
     opacity: 1;
   }
 
@@ -507,7 +630,7 @@ const moduleCards = [
   .home-dashboard__socials a {
     color: rgb(var(--home-ink));
     border: 1px solid rgb(var(--home-border) / 0.28);
-    background: rgb(var(--home-panel) / 0.18);
+    background: rgb(var(--home-panel) / var(--home-glass-alpha));
     box-shadow:
       0 12px 34px rgb(var(--home-shadow) / 0.1),
       inset 0 1px 0 rgb(255 255 255 / 0.18);
@@ -519,7 +642,7 @@ const moduleCards = [
   .home-dashboard__socials a:hover {
     color: rgb(var(--home-ink));
     border-color: rgb(var(--home-border) / 0.45);
-    background: rgb(var(--home-panel) / 0.28);
+    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
     transform: translateY(-2px);
   }
 
@@ -545,7 +668,7 @@ const moduleCards = [
   .home-dashboard .glass-strong {
     color: rgb(var(--home-ink));
     border-color: rgb(var(--home-border) / 0.26);
-    background: rgb(var(--home-panel) / 0.18);
+    background: rgb(var(--home-panel) / var(--home-glass-alpha));
     box-shadow:
       0 18px 50px rgb(var(--home-shadow) / 0.12),
       inset 0 1px 0 rgb(255 255 255 / 0.2);
@@ -554,7 +677,7 @@ const moduleCards = [
   }
 
   .home-dashboard .glass-strong {
-    background: rgb(var(--home-panel) / 0.24);
+    background: rgb(var(--home-panel) / var(--home-glass-strong-alpha));
   }
 
   .search-panel,
@@ -664,13 +787,13 @@ const moduleCards = [
     padding: 0 0.85rem;
     color: rgb(var(--home-ink));
     border: 1px solid rgb(var(--home-border) / 0.18);
-    background: rgb(var(--home-panel) / 0.16);
+    background: rgb(var(--home-panel) / var(--home-glass-alpha));
     font-size: 0.88rem;
     white-space: nowrap;
   }
 
   .section-heading a:hover {
-    background: rgb(var(--home-panel) / 0.25);
+    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
     transform: translateY(-1px);
   }
 
@@ -770,7 +893,7 @@ const moduleCards = [
 
   .module-card:hover {
     color: rgb(var(--home-ink));
-    background: rgb(var(--home-panel) / 0.26);
+    background: rgb(var(--home-panel) / var(--home-glass-hover-alpha));
     transform: translateY(-2px);
   }
 
