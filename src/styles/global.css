@@ -70,6 +70,17 @@ body {
   transition: background-color 0.3s ease;
 }
 
+html.is-home-screen,
+html.is-home-screen body {
+  height: 100%;
+  overflow: hidden;
+}
+
+html.is-home-screen #main {
+  height: 100%;
+  overflow: hidden;
+}
+
 /* 渐变背景层（即使没设置背景图也有美感）*/
 body::before {
   content: "";

@@ -105,18 +105,6 @@ const moduleCards = [
       class="home-dashboard__hero"
       aria-labelledby="home-dashboard-title"
     >
-      <p class="home-eyebrow">{t("home.dashboard.eyebrow")}</p>
-
-      <div class="profile-orbit">
-        <div class="profile-orbit__avatar">
-          <img
-            src={site.author.avatar}
-            alt={site.author.name[lang]}
-            loading="eager"
-          />
-        </div>
-      </div>
-
       <h1 id="home-dashboard-title">{site.title[lang]}</h1>
       <p class="home-dashboard__subtitle">{site.subtitle[lang]}</p>
       <p class="home-dashboard__bio">{site.author.bio[lang]}</p>
@@ -170,7 +158,7 @@ const moduleCards = [
               id="home-search"
               type="search"
               name="q"
-              placeholder={t("home.dashboard.searchPlaceholder")}
+              placeholder={site.title[lang]}
               autocomplete="off"
             />
             <button type="submit" aria-label={t("common.search")}>
@@ -284,11 +272,11 @@ const moduleCards = [
 
     position: relative;
     isolation: isolate;
-    min-height: 100vh;
-    min-height: 100svh;
-    margin-top: -6rem;
+    height: 100vh;
+    height: 100svh;
+    margin-top: -3rem;
     overflow: hidden;
-    padding: 7.25rem 1rem 4rem;
+    padding: 4.8rem 1rem 1rem;
     color: rgb(var(--home-ink));
   }
 
@@ -340,13 +328,15 @@ const moduleCards = [
   .home-dashboard__inner {
     width: min(1120px, 100%);
     margin: 0 auto;
+    height: 100%;
+    overflow: hidden;
   }
 
   .home-dashboard__hero {
     display: grid;
     justify-items: center;
     min-width: 0;
-    padding: clamp(1.25rem, 4vw, 3rem) 0 clamp(1.75rem, 5vw, 4rem);
+    padding: clamp(0.75rem, 3vw, 2rem) 0 clamp(1rem, 3vw, 2rem);
     text-align: center;
   }
 
@@ -363,43 +353,12 @@ const moduleCards = [
     text-transform: uppercase;
   }
 
-  .profile-orbit {
-    width: clamp(5.5rem, 18vw, 8rem);
-    aspect-ratio: 1;
-    margin-bottom: 1rem;
-    border-radius: 1.5rem;
-    padding: 0.35rem;
-    background: linear-gradient(
-      135deg,
-      rgb(255 255 255 / 0.88),
-      rgb(255 255 255 / 0.22)
-    );
-    box-shadow:
-      0 24px 60px rgb(0 0 0 / 0.32),
-      inset 0 1px 0 rgb(255 255 255 / 0.65);
-  }
-
-  .profile-orbit__avatar {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 0.55);
-    border-radius: 1.15rem;
-    background: rgb(255 255 255 / 0.72);
-  }
-
-  .profile-orbit img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
   .home-dashboard__hero h1 {
     max-width: min(100%, 56rem);
     margin: 0;
     color: rgb(var(--home-ink));
     font-family: var(--font-serif, Georgia, serif);
-    font-size: clamp(2.7rem, 11vw, 6.6rem);
+    font-size: clamp(2.35rem, 9vw, 5.7rem);
     line-height: 0.96;
     letter-spacing: 0;
     text-shadow: 0 18px 50px rgb(0 0 0 / 0.46);
@@ -408,19 +367,19 @@ const moduleCards = [
 
   .home-dashboard__subtitle {
     max-width: 46rem;
-    margin: 1rem 0 0;
+    margin: 0.75rem 0 0;
     color: rgb(var(--home-ink) / 0.94);
     font-size: clamp(1rem, 2.2vw, 1.32rem);
     font-weight: 700;
-    line-height: 1.7;
+    line-height: 1.55;
     text-shadow: 0 8px 24px rgb(0 0 0 / 0.42);
   }
 
   .home-dashboard__bio {
     max-width: 36rem;
-    margin: 0.35rem 0 0;
+    margin: 0.25rem 0 0;
     color: rgb(var(--home-muted) / 0.9);
-    line-height: 1.75;
+    line-height: 1.55;
     text-shadow: 0 8px 22px rgb(0 0 0 / 0.34);
   }
 
@@ -431,7 +390,7 @@ const moduleCards = [
     align-items: center;
     justify-content: center;
     gap: 0.7rem;
-    margin-top: 1.2rem;
+    margin-top: 0.9rem;
     max-width: 100%;
   }
 
@@ -501,6 +460,8 @@ const moduleCards = [
     display: grid;
     gap: 1rem;
     min-width: 0;
+    max-height: calc(100% - 16rem);
+    overflow: hidden;
   }
 
   .home-dashboard__utility {
@@ -729,7 +690,7 @@ const moduleCards = [
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.85rem;
-    min-height: 6.2rem;
+    min-height: 5.3rem;
     padding: 1rem;
     text-decoration: none;
   }
@@ -839,8 +800,8 @@ const moduleCards = [
 
   @media (min-width: 980px) {
     .home-dashboard {
-      padding-top: 7.5rem;
-      padding-bottom: 5rem;
+      padding-top: 5.25rem;
+      padding-bottom: 1.25rem;
     }
 
     .home-dashboard__content {
@@ -849,6 +810,7 @@ const moduleCards = [
           0.92fr
         );
       align-items: start;
+      max-height: calc(100% - 18rem);
     }
 
     .latest-panel {
@@ -859,7 +821,41 @@ const moduleCards = [
   @media (max-width: 560px) {
     .home-dashboard {
       padding-inline: 0.75rem;
-      padding-bottom: 3rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .home-dashboard__subtitle,
+    .home-dashboard__bio,
+    .latest-item p,
+    .module-card__desc {
+      display: none;
+    }
+
+    .home-dashboard__content {
+      gap: 0.75rem;
+      max-height: calc(100% - 11.5rem);
+    }
+
+    .home-dashboard__utility {
+      gap: 0.75rem;
+    }
+
+    .stats-grid,
+    .modules-panel {
+      display: none;
+    }
+
+    .search-panel,
+    .latest-panel {
+      padding: 0.8rem;
+    }
+
+    .latest-list {
+      gap: 0.5rem;
+    }
+
+    .latest-item:nth-child(n + 3) {
+      display: none;
     }
 
     .home-dashboard__actions {

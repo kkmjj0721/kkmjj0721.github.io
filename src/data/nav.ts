@@ -5,25 +5,14 @@
  */
 export const nav = [
   { key: "home", href: "/" },
-  { key: "posts", href: "/posts/" },
-  { key: "categories", href: "/categories/" },
-  { key: "tags", href: "/tags/" },
+  { key: "projects", href: "/projects/" },
   { key: "archives", href: "/archives/" },
   { key: "gallery", href: "/gallery/" },
-  { key: "projects", href: "/projects/" },
-  {
-    key: "tracking",
-    href: "/tracking/anime/",
-    children: [
-      { key: "anime", href: "/tracking/anime/" },
-      { key: "games", href: "/tracking/games/" },
-      { key: "books", href: "/tracking/books/" },
-      { key: "movies", href: "/tracking/movies/" },
-    ],
-  },
+  { key: "music", href: "/music/" },
+  { key: "inspiration", href: "/inspiration/" },
   { key: "moments", href: "/moments/" },
+  { key: "essays", href: "/posts/" },
   { key: "friends", href: "/friends/" },
-  { key: "guestbook", href: "/guestbook/" },
   { key: "about", href: "/about/" },
 ] as const;
 

@@ -14,7 +14,7 @@ export const site = {
   /** 站点名（zh/en 双语）*/
   title: {
     zh: "奈奈奈奈奈绪の博客", // TODO(content): 改为你的站点名
-    en: "Stellar Corridor",
+    en: "奈奈奈奈奈绪の博客",
   },
 
   /** 站点副标题 / 一句话签名 */
