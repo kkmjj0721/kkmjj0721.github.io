@@ -91,30 +91,47 @@ const canonical = new URL(Astro.url.pathname, site.siteUrl).toString();
       href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css"
     />
 
-    <!-- 主题/主色尽早初始化，避免闪烁 -->
+    <!-- 主题/主色尽早初始化，避免闪烁；并在 View Transitions 切页后重新应用 -->
     <script is:inline define:vars={{ defaultBrand: site.brand.default }}>
       (function () {
-        try {
-          const savedTheme = localStorage.getItem("blog:theme") || "auto";
-          const resolved =
-            savedTheme === "auto"
-              ? window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light"
-              : savedTheme;
-          document.documentElement.setAttribute("data-theme", resolved);
-        } catch {}
-        try {
-          const c = localStorage.getItem("blog:brand-color") || defaultBrand;
-          const v = c.replace("#", "");
-          const r = parseInt(v.slice(0, 2), 16);
-          const g = parseInt(v.slice(2, 4), 16);
-          const b = parseInt(v.slice(4, 6), 16);
-          document.documentElement.style.setProperty(
-            "--color-brand",
-            r + " " + g + " " + b,
-          );
-        } catch {}
+        function applyTheme() {
+          try {
+            const savedTheme = localStorage.getItem("blog:theme") || "auto";
+            const resolved =
+              savedTheme === "auto"
+                ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light"
+                : savedTheme;
+            document.documentElement.setAttribute("data-theme", resolved);
+          } catch {}
+          try {
+            const c = localStorage.getItem("blog:brand-color") || defaultBrand;
+            const v = c.replace("#", "");
+            const r = parseInt(v.slice(0, 2), 16);
+            const g = parseInt(v.slice(2, 4), 16);
+            const b = parseInt(v.slice(4, 6), 16);
+            document.documentElement.style.setProperty(
+              "--color-brand",
+              r + " " + g + " " + b,
+            );
+          } catch {}
+        }
+        applyTheme();
+        // View Transitions: swap 进来的新文档会带 SSR 默认 data-theme/style，
+        // 在 swap 前把当前主题/主色直接写到 e.newDocument 上，避免闪烁
+        document.addEventListener("astro:before-swap", (e) => {
+          try {
+            const cur = document.documentElement;
+            const next = e.newDocument.documentElement;
+            const theme = cur.getAttribute("data-theme");
+            if (theme) next.setAttribute("data-theme", theme);
+            const brand = cur.style.getPropertyValue("--color-brand");
+            if (brand) next.style.setProperty("--color-brand", brand);
+          } catch {}
+        });
+        // 兜底：swap 完成后再读 localStorage 校正一次
+        document.addEventListener("astro:after-swap", applyTheme);
       })();
     </script>
 
