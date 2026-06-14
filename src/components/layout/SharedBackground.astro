@@ -3,7 +3,12 @@ const lightBackgroundVideo = "/images/backgrounds/tomori-light.mp4";
 const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
 ---
 
-<div class="site-background" data-site-background aria-hidden="true">
+<div
+  class="site-background"
+  data-site-background
+  aria-hidden="true"
+  transition:persist="site-background"
+>
   <video
     class="site-background__video site-background__video--light"
     data-site-background-video
@@ -13,15 +18,33 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
     muted
     loop
     playsinline
-    preload="none"></video>
+    preload="auto"></video>
   <div class="site-background__overlay"></div>
 </div>
+
+<script is:inline>
+  // 在 DOM 解析时立刻给 video 设 src，让浏览器尽早开始下载。
+  // 此时 BaseLayout 的 head 内联脚本已写好 data-theme。
+  (function () {
+    var v = document.querySelector("[data-site-background-video]");
+    if (!v || v.getAttribute("src")) return;
+    var theme =
+      document.documentElement.getAttribute("data-theme") === "dark"
+        ? "dark"
+        : "light";
+    var src = theme === "dark" ? v.dataset.srcDark : v.dataset.srcLight;
+    if (!src) return;
+    v.classList.toggle("site-background__video--dark", theme === "dark");
+    v.classList.toggle("site-background__video--light", theme !== "dark");
+    v.setAttribute("src", src);
+  })();
+</script>
 
 <script>
   declare global {
     interface Window {
       __siteBackgroundController?: AbortController;
-      __siteBackgroundPageLoadBound?: boolean;
+      __siteBackgroundBound?: boolean;
     }
   }
 
@@ -47,11 +70,8 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
       video.classList.toggle("is-video-ready", isReady);
     };
 
-    const removeVideoSource = () => {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-    };
+    // 持久化的视频可能已经处于 ready 状态（readyState >= 2 = HAVE_CURRENT_DATA）
+    if (video.readyState >= 2) setReady(true);
 
     const syncVideoSource = () => {
       const theme =
@@ -63,25 +83,25 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
       video.classList.toggle("site-background__video--dark", theme === "dark");
       video.classList.toggle("site-background__video--light", theme !== "dark");
 
-      if (!nextSrc) {
-        setReady(false);
-        removeVideoSource();
-        return;
-      }
+      if (!nextSrc) return;
 
-      if (video.getAttribute("src") !== nextSrc) {
+      // 只在 src 真的不同时才换源（避免持久化的视频被无意义 reload）
+      const currentSrc = video.getAttribute("src");
+      const needsReload =
+        !currentSrc ||
+        (!currentSrc.endsWith(nextSrc) && !currentSrc.includes(nextSrc));
+      if (needsReload) {
         setReady(false);
-        removeVideoSource();
+        video.pause();
         video.setAttribute("src", nextSrc);
         video.load();
       }
 
-      void video.play().catch(() => {
-        setReady(false);
-      });
+      void video.play().catch(() => {});
     };
 
     video.addEventListener("loadeddata", () => setReady(true), { signal });
+    video.addEventListener("canplay", () => setReady(true), { signal });
     video.addEventListener("error", () => setReady(false), { signal });
 
     const observer = new MutationObserver(syncVideoSource);
@@ -98,9 +118,10 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
 
   initSiteBackground();
 
-  if (!window.__siteBackgroundPageLoadBound) {
+  if (!window.__siteBackgroundBound) {
+    // 切页后 (video 持久化保留)，重新绑定 observer 到当前 documentElement
     document.addEventListener("astro:page-load", initSiteBackground);
-    window.__siteBackgroundPageLoadBound = true;
+    window.__siteBackgroundBound = true;
   }
 </script>
 
