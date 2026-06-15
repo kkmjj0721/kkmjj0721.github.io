@@ -1,6 +1,8 @@
 ---
 const lightBackgroundVideo = "/images/backgrounds/tomori-light.mp4";
 const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
+const lightBackgroundPoster = "/images/backgrounds/tomori-light-poster.webp";
+const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
 ---
 
 <div
@@ -9,11 +11,21 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
   aria-hidden="true"
   transition:persist="site-background"
 >
+  <div
+    class="site-background__poster"
+    data-site-background-poster
+    data-src-light={lightBackgroundPoster}
+    data-src-dark={darkBackgroundPoster}
+  >
+  </div>
   <video
     class="site-background__video site-background__video--light"
     data-site-background-video
     data-src-light={lightBackgroundVideo}
     data-src-dark={darkBackgroundVideo}
+    data-poster-light={lightBackgroundPoster}
+    data-poster-dark={darkBackgroundPoster}
+    poster={lightBackgroundPoster}
     autoplay
     muted
     loop
@@ -28,14 +40,19 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
   (function () {
     var v = document.querySelector("[data-site-background-video]");
     if (!v || v.getAttribute("src")) return;
+    var poster = document.querySelector("[data-site-background-poster]");
     var theme =
       document.documentElement.getAttribute("data-theme") === "dark"
         ? "dark"
         : "light";
     var src = theme === "dark" ? v.dataset.srcDark : v.dataset.srcLight;
+    var posterSrc =
+      theme === "dark" ? v.dataset.posterDark : v.dataset.posterLight;
     if (!src) return;
     v.classList.toggle("site-background__video--dark", theme === "dark");
     v.classList.toggle("site-background__video--light", theme !== "dark");
+    if (poster) poster.dataset.theme = theme;
+    if (posterSrc) v.setAttribute("poster", posterSrc);
     v.setAttribute("src", src);
   })();
 </script>
@@ -78,10 +95,15 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
         root.getAttribute("data-theme") === "dark" ? "dark" : "light";
       const nextSrc =
         theme === "dark" ? video.dataset.srcDark : video.dataset.srcLight;
+      const nextPoster =
+        theme === "dark"
+          ? video.dataset.posterDark
+          : video.dataset.posterLight;
 
       background.dataset.theme = theme;
       video.classList.toggle("site-background__video--dark", theme === "dark");
       video.classList.toggle("site-background__video--light", theme !== "dark");
+      if (nextPoster) video.setAttribute("poster", nextPoster);
 
       if (!nextSrc) return;
 
@@ -136,11 +158,35 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
     pointer-events: none;
   }
 
+  .site-background__poster,
   .site-background__video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+  }
+
+  .site-background__poster {
+    background-image: url("/images/backgrounds/tomori-light-poster.webp");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.92;
+    filter: saturate(1.03) contrast(0.98) brightness(1.04);
+    transition: opacity 0.35s ease;
+  }
+
+  :global(html[data-theme="dark"]) .site-background__poster {
+    background-image: url("/images/backgrounds/tomori-dark-poster.webp");
+    opacity: 0.86;
+    filter: saturate(1.08) contrast(1.02);
+  }
+
+  .site-background.is-video-ready .site-background__poster {
+    opacity: 0;
+  }
+
+  .site-background__video {
     object-fit: cover;
     opacity: 0;
     filter: saturate(1.08) contrast(1.02);
@@ -159,7 +205,7 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
   .site-background__overlay {
     position: absolute;
     inset: 0;
-    opacity: 0;
+    opacity: 1;
     background:
       linear-gradient(
         180deg,
@@ -174,10 +220,6 @@ const darkBackgroundVideo = "/images/backgrounds/tomori-dark.mp4";
         rgb(255 255 255 / 0.3)
       );
     transition: opacity 0.35s ease;
-  }
-
-  .site-background.is-video-ready .site-background__overlay {
-    opacity: 1;
   }
 
   :global(html[data-theme="dark"]) .site-background__overlay {

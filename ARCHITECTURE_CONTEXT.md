@@ -23,6 +23,9 @@
 - homepage_background_video_validation: verified by `npm run build` and `npm run lint` with final gate `[ALL_TESTS_PASSED]`
 - homepage_background_video_perf_2026_06_15: immediate background video loading is preserved with `preload="auto"` and inline `src` assignment during parse; `astro.config.mjs` now uses `prefetchAll: false` and `defaultStrategy: "hover"` to reduce viewport prefetch contention; MP4 assets were remuxed with ffmpeg faststart via stream copy, with playback-critical parameters unchanged and `moov` positioned before `mdat`
 - homepage_background_video_perf_validation_2026_06_15: `npm run build` PASS, safety review PASS, verification PASS, and the change was validated without delaying initial video load
+- shared_background_poster_release_2026_06_15: `src/components/layout/SharedBackground.astro` now renders a poster layer ahead of the shared video background, keeps light/dark poster and video sources synchronized, retains the poster on video error, and fades the video in after `loadeddata`/`canplay`
+- shared_background_poster_assets_2026_06_15: new poster assets were added at `public/images/backgrounds/tomori-light-poster.webp` and `public/images/backgrounds/tomori-dark-poster.webp`
+- shared_background_poster_validation_2026_06_15: verified by `npm run build` PASS; existing build warnings remain limited to optional content dirs/empty collections and the Vite chunk size notice
 - site_identity: canonical Chinese site title is now `奈奈奈奈奈绪の博客`; legacy title `星之回廊` no longer appears in `src`, `public`, or `dist`
 - site_identity_placeholder_sync: `src/data/site.ts` and `public/images/placeholders/og-default.placeholder.svg` now share the same Chinese site title
 - site_identity_validation: replacement verified by `npm run build` PASS and `npm run lint` PASS with final gate `[ALL_TESTS_PASSED]`
