@@ -1,6 +1,6 @@
 # Architecture Context
 
-- updated_at: 2026-06-13
+- updated_at: 2026-06-15
 - release_stage: phase_5_release_logging
 - status: verified
 - framework: Astro
@@ -21,6 +21,8 @@
 - homepage_surface: translucent dashboard implemented in `src/components/home/HomeDashboard.astro` and mounted from `src/pages/index.astro`
 - homepage_background_video: `src/components/home/HomeDashboard.astro` now supports a video-backed hero background using `public/images/backgrounds/友利奈绪动态壁纸.mp4`; the built asset is present at `dist/images/backgrounds/友利奈绪动态壁纸.mp4`
 - homepage_background_video_validation: verified by `npm run build` and `npm run lint` with final gate `[ALL_TESTS_PASSED]`
+- homepage_background_video_perf_2026_06_15: immediate background video loading is preserved with `preload="auto"` and inline `src` assignment during parse; `astro.config.mjs` now uses `prefetchAll: false` and `defaultStrategy: "hover"` to reduce viewport prefetch contention; MP4 assets were remuxed with ffmpeg faststart via stream copy, with playback-critical parameters unchanged and `moov` positioned before `mdat`
+- homepage_background_video_perf_validation_2026_06_15: `npm run build` PASS, safety review PASS, verification PASS, and the change was validated without delaying initial video load
 - site_identity: canonical Chinese site title is now `奈奈奈奈奈绪の博客`; legacy title `星之回廊` no longer appears in `src`, `public`, or `dist`
 - site_identity_placeholder_sync: `src/data/site.ts` and `public/images/placeholders/og-default.placeholder.svg` now share the same Chinese site title
 - site_identity_validation: replacement verified by `npm run build` PASS and `npm run lint` PASS with final gate `[ALL_TESTS_PASSED]`
