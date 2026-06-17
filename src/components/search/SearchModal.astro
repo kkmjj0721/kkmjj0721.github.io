@@ -55,6 +55,7 @@ const copy =
     role="dialog"
     aria-modal="true"
     aria-labelledby={`${id}-title`}
+    tabindex="-1"
   >
     <header class="search-modal__header">
       <h2 id={`${id}-title`}>{copy.title}</h2>
@@ -119,10 +120,47 @@ const copy =
   function getParts() {
     if (!modal) return {};
     return {
+      panel: modal.querySelector(".search-modal__panel"),
       input: modal.querySelector("[data-search-input]"),
       status: modal.querySelector("[data-search-status]"),
       results: modal.querySelector("[data-search-results]"),
     };
+  }
+
+  function focusElement(element) {
+    if (!(element instanceof HTMLElement)) return;
+    try {
+      element.focus({ preventScroll: true });
+    } catch {
+      element.focus();
+    }
+  }
+
+  function isUsableFocusTarget(element) {
+    if (!(element instanceof HTMLElement)) return false;
+    if (element.hidden || element.closest("[hidden]")) return false;
+    if (element.getAttribute("aria-hidden") === "true") return false;
+    if (element instanceof HTMLButtonElement && element.disabled) return false;
+    return true;
+  }
+
+  function getFocusTargets() {
+    const { panel } = getParts();
+    if (!(panel instanceof HTMLElement)) return [];
+    return Array.from(
+      panel.querySelectorAll(
+        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      ),
+    ).filter(isUsableFocusTarget);
+  }
+
+  function focusFallback() {
+    const { input, panel } = getParts();
+    if (input instanceof HTMLElement && isUsableFocusTarget(input)) {
+      focusElement(input);
+      return;
+    }
+    focusElement(panel);
   }
 
   function setStatus(message) {
@@ -145,10 +183,10 @@ const copy =
     if (open) {
       lastFocused = document.activeElement;
       setStatus(unavailable ? copy.unavailable : copy.idle);
-      window.setTimeout(() => input?.focus(), 20);
+      window.setTimeout(() => focusElement(input), 20);
       void ensurePagefind();
     } else if (lastFocused instanceof HTMLElement) {
-      lastFocused.focus();
+      focusElement(lastFocused);
     }
   }
 
@@ -259,6 +297,52 @@ const copy =
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setOpen(true);
+      }
+      if (event.key !== "Tab" || modal.hidden) return;
+
+      const focusTargets = getFocusTargets();
+      if (focusTargets.length === 0) {
+        event.preventDefault();
+        focusFallback();
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      const currentIndex = focusTargets.indexOf(activeElement);
+      const lastIndex = focusTargets.length - 1;
+      const nextIndex = event.shiftKey
+        ? currentIndex <= 0
+          ? lastIndex
+          : currentIndex - 1
+        : currentIndex < 0 || currentIndex >= lastIndex
+          ? 0
+          : currentIndex + 1;
+
+      if (
+        currentIndex < 0 ||
+        (event.shiftKey && currentIndex === 0) ||
+        (!event.shiftKey && currentIndex === lastIndex)
+      ) {
+        event.preventDefault();
+        focusElement(focusTargets[nextIndex]);
+      }
+    });
+
+    addListener(document, "focusin", (event) => {
+      if (modal.hidden) return;
+      const { panel } = getParts();
+      if (
+        panel instanceof HTMLElement &&
+        event.target instanceof Node &&
+        panel.contains(event.target)
+      ) {
+        return;
+      }
+      const focusTargets = getFocusTargets();
+      if (focusTargets.length > 0) {
+        focusElement(focusTargets[0]);
+      } else {
+        focusFallback();
       }
     });
 

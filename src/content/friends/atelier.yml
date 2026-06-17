@@ -1,0 +1,8 @@
+name: "样例工坊"
+url: "https://example.com/"
+avatar: "/images/placeholders/avatar.placeholder.svg"
+description: "记录设计、前端和日常折腾的朋友站。"
+tags:
+  - "设计"
+  - "前端"
+group: "朋友"

@@ -26,20 +26,18 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
     data-poster-light={lightBackgroundPoster}
     data-poster-dark={darkBackgroundPoster}
     poster={lightBackgroundPoster}
-    autoplay
     muted
-    loop
     playsinline
-    preload="auto"></video>
+    preload="none"></video>
   <div class="site-background__overlay"></div>
 </div>
 
 <script is:inline>
-  // 在 DOM 解析时立刻给 video 设 src，让浏览器尽早开始下载。
+  // 在 DOM 解析时同步主题；仅在未请求 reduced motion 时立刻给 video 设 src。
   // 此时 BaseLayout 的 head 内联脚本已写好 data-theme。
   (function () {
     var v = document.querySelector("[data-site-background-video]");
-    if (!v || v.getAttribute("src")) return;
+    if (!v) return;
     var poster = document.querySelector("[data-site-background-poster]");
     var theme =
       document.documentElement.getAttribute("data-theme") === "dark"
@@ -53,6 +51,21 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
     v.classList.toggle("site-background__video--light", theme !== "dark");
     if (poster) poster.dataset.theme = theme;
     if (posterSrc) v.setAttribute("poster", posterSrc);
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      v.pause();
+      v.removeAttribute("autoplay");
+      v.removeAttribute("loop");
+      v.setAttribute("preload", "none");
+      v.removeAttribute("src");
+      return;
+    }
+    if (v.getAttribute("src")) return;
+    v.setAttribute("autoplay", "");
+    v.setAttribute("loop", "");
+    v.setAttribute("preload", "auto");
     v.setAttribute("src", src);
   })();
 </script>
@@ -73,6 +86,9 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
     const { signal } = controller;
 
     const root = document.documentElement;
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     const background = document.querySelector<HTMLElement>(
       "[data-site-background]",
     );
@@ -86,11 +102,16 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
       background.classList.toggle("is-video-ready", isReady);
       video.classList.toggle("is-video-ready", isReady);
     };
+    const setReadyWhenPlayable = () => {
+      if (!reducedMotionQuery.matches && video.getAttribute("src")) {
+        setReady(true);
+      }
+    };
 
     // 持久化的视频可能已经处于 ready 状态（readyState >= 2 = HAVE_CURRENT_DATA）
-    if (video.readyState >= 2) setReady(true);
+    if (video.readyState >= 2) setReadyWhenPlayable();
 
-    const syncVideoSource = () => {
+    const syncVideoState = () => {
       const theme =
         root.getAttribute("data-theme") === "dark" ? "dark" : "light";
       const nextSrc =
@@ -105,7 +126,24 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
       video.classList.toggle("site-background__video--light", theme !== "dark");
       if (nextPoster) video.setAttribute("poster", nextPoster);
 
+      if (reducedMotionQuery.matches) {
+        setReady(false);
+        video.pause();
+        video.removeAttribute("autoplay");
+        video.removeAttribute("loop");
+        video.setAttribute("preload", "none");
+        if (video.getAttribute("src")) {
+          video.removeAttribute("src");
+          video.load();
+        }
+        return;
+      }
+
       if (!nextSrc) return;
+
+      video.setAttribute("autoplay", "");
+      video.setAttribute("loop", "");
+      video.setAttribute("preload", "auto");
 
       // 只在 src 真的不同时才换源（避免持久化的视频被无意义 reload）
       const currentSrc = video.getAttribute("src");
@@ -119,23 +157,31 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
         video.load();
       }
 
-      void video.play().catch(() => {});
+      if (!reducedMotionQuery.matches) {
+        void video.play().catch(() => {});
+      }
     };
 
-    video.addEventListener("loadeddata", () => setReady(true), { signal });
-    video.addEventListener("canplay", () => setReady(true), { signal });
+    video.addEventListener("loadeddata", setReadyWhenPlayable, { signal });
+    video.addEventListener("canplay", setReadyWhenPlayable, { signal });
     video.addEventListener("error", () => setReady(false), { signal });
 
-    const observer = new MutationObserver(syncVideoSource);
+    const observer = new MutationObserver(syncVideoState);
     observer.observe(root, {
       attributes: true,
       attributeFilter: ["data-theme"],
     });
+    reducedMotionQuery.addEventListener("change", syncVideoState);
     signal.addEventListener("abort", () => observer.disconnect(), {
       once: true,
     });
+    signal.addEventListener(
+      "abort",
+      () => reducedMotionQuery.removeEventListener("change", syncVideoState),
+      { once: true },
+    );
 
-    syncVideoSource();
+    syncVideoState();
   };
 
   initSiteBackground();
@@ -200,6 +246,22 @@ const darkBackgroundPoster = "/images/backgrounds/tomori-dark-poster.webp";
 
   .site-background__video--dark.is-video-ready {
     opacity: 0.86;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-background.is-video-ready .site-background__poster {
+      opacity: 0.92;
+    }
+
+    :global(html[data-theme="dark"])
+      .site-background.is-video-ready
+      .site-background__poster {
+      opacity: 0.86;
+    }
+
+    .site-background__video.is-video-ready {
+      opacity: 0;
+    }
   }
 
   .site-background__overlay {

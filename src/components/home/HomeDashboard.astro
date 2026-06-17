@@ -49,21 +49,12 @@ const daysOnline = Number.isFinite(startedAtMs)
 
 const visibleSocial = site.social.filter((item) => item.show);
 const trackingCount = animeCount + gameCount + bookCount + movieCount;
-const musicSrc = "/audio/bgm/Departures.mp3";
 
 const copy = {
   zh: {
     profileKicker: "个人空间",
     online: "在线记录中",
     searchKicker: "SearchBar",
-    playerKicker: "CloudPlayer",
-    playerTitle: "Departures",
-    playerArtist: "点击播放背景音乐",
-    playerPlay: "播放音乐",
-    playerPause: "暂停音乐",
-    lyricIdle: "让音乐从一次点击开始。",
-    lyricPlaying: "正在播放 Departures，背景与卡片保持轻盈透明。",
-    lyricError: "浏览器暂时无法播放这首音乐。",
     postsKicker: "LatestPostsCarousel",
     chatterKicker: "LatestChatterCarousel",
     chatterTitle: "最近说说",
@@ -86,14 +77,6 @@ const copy = {
     profileKicker: "Personal space",
     online: "Logging online",
     searchKicker: "SearchBar",
-    playerKicker: "CloudPlayer",
-    playerTitle: "Departures",
-    playerArtist: "Click to play background music",
-    playerPlay: "Play music",
-    playerPause: "Pause music",
-    lyricIdle: "Music starts with one click.",
-    lyricPlaying: "Departures is playing while the glass cards stay light.",
-    lyricError: "The browser could not play this track.",
     postsKicker: "LatestPostsCarousel",
     chatterKicker: "LatestChatterCarousel",
     chatterTitle: "Recent chatter",
@@ -189,11 +172,6 @@ const dashboardItems = [
 
 <section
   class="home-dashboard"
-  data-lyric-idle={copy.lyricIdle}
-  data-lyric-playing={copy.lyricPlaying}
-  data-lyric-error={copy.lyricError}
-  data-player-play-label={copy.playerPlay}
-  data-player-pause-label={copy.playerPause}
 >
   <div class="home-dashboard__inner">
     <div class="home-dashboard__layout">
@@ -271,61 +249,6 @@ const dashboardItems = [
             <span>{t("home.dashboard.searchPlaceholder")}</span>
             <Icon name="mdi:arrow-right" class="h-5 w-5" />
           </button>
-        </section>
-
-        <section
-          class="home-glass player-card"
-          data-home-player
-          aria-labelledby="home-player-title"
-        >
-          <audio data-home-audio src={musicSrc} preload="metadata"></audio>
-          <div class="panel-heading panel-heading--compact">
-            <div>
-              <p class="home-kicker">{copy.playerKicker}</p>
-              <h2 id="home-player-title">{copy.playerTitle}</h2>
-            </div>
-            <button
-              type="button"
-              class="player-toggle"
-              data-home-audio-toggle
-              aria-label={copy.playerPlay}
-              aria-pressed="false"
-            >
-              <Icon
-                name="mdi:play"
-                class="player-toggle__play h-6 w-6"
-                aria-hidden="true"
-              />
-              <Icon
-                name="mdi:pause"
-                class="player-toggle__pause h-6 w-6"
-                aria-hidden="true"
-              />
-            </button>
-          </div>
-
-          <div class="player-card__track">
-            <span class="player-card__disc" aria-hidden="true">
-              <Icon name="mdi:music" class="h-5 w-5" />
-            </span>
-            <div>
-              <strong>{copy.playerTitle}</strong>
-              <span>{copy.playerArtist}</span>
-            </div>
-          </div>
-
-          <div
-            class="player-progress"
-            data-home-audio-progress
-            aria-hidden="true"
-          >
-            <span></span>
-          </div>
-
-          <div class="lyric-bar">
-            <Icon name="mdi:music-note-outline" class="h-4 w-4" />
-            <p data-home-lyric>{copy.lyricIdle}</p>
-          </div>
         </section>
       </aside>
 
@@ -539,70 +462,7 @@ const dashboardItems = [
     window.__homeDashboardController = controller;
     const { signal } = controller;
 
-    const dashboard = document.querySelector<HTMLElement>(".home-dashboard");
     const root = document.documentElement;
-
-    const player = document.querySelector<HTMLElement>("[data-home-player]");
-    const audio = document.querySelector<HTMLAudioElement>("[data-home-audio]");
-    const toggle = document.querySelector<HTMLButtonElement>(
-      "[data-home-audio-toggle]",
-    );
-    const progress = document.querySelector<HTMLElement>(
-      "[data-home-audio-progress]",
-    );
-    const lyric = document.querySelector<HTMLElement>("[data-home-lyric]");
-    const lyricIdle = dashboard?.dataset.lyricIdle ?? "";
-    const lyricPlaying = dashboard?.dataset.lyricPlaying ?? "";
-    const lyricError = dashboard?.dataset.lyricError ?? "";
-    const playerPlayLabel = dashboard?.dataset.playerPlayLabel ?? "";
-    const playerPauseLabel = dashboard?.dataset.playerPauseLabel ?? "";
-
-    const updatePlayerState = () => {
-      const isPlaying = Boolean(audio && !audio.paused);
-      player?.classList.toggle("is-playing", isPlaying);
-      if (toggle) {
-        toggle.setAttribute("aria-pressed", String(isPlaying));
-        toggle.setAttribute(
-          "aria-label",
-          isPlaying ? playerPauseLabel : playerPlayLabel,
-        );
-      }
-      if (lyric) {
-        lyric.textContent = isPlaying ? lyricPlaying : lyricIdle;
-      }
-    };
-
-    const updateProgress = () => {
-      if (!audio || !progress || !Number.isFinite(audio.duration)) {
-        progress?.style.setProperty("--progress", "0%");
-        return;
-      }
-      const percent = Math.min(100, (audio.currentTime / audio.duration) * 100);
-      progress.style.setProperty("--progress", `${percent}%`);
-    };
-
-    toggle?.addEventListener(
-      "click",
-      () => {
-        if (!audio) return;
-        if (audio.paused) {
-          void audio.play().catch(() => {
-            if (lyric) lyric.textContent = lyricError;
-          });
-        } else {
-          audio.pause();
-        }
-      },
-      { signal },
-    );
-
-    audio?.addEventListener("play", updatePlayerState, { signal });
-    audio?.addEventListener("pause", updatePlayerState, { signal });
-    audio?.addEventListener("ended", updatePlayerState, { signal });
-    audio?.addEventListener("timeupdate", updateProgress, { signal });
-    audio?.addEventListener("loadedmetadata", updateProgress, { signal });
-    updatePlayerState();
-    updateProgress();
 
     const resolveTheme = (mode: string) => {
       if (mode === "auto") {
@@ -807,7 +667,6 @@ const dashboardItems = [
 
   .profile-card,
   .search-card,
-  .player-card,
   .posts-carousel,
   .chatter-carousel,
   .theme-card,
@@ -821,8 +680,6 @@ const dashboardItems = [
   .profile-card__actions,
   .panel-heading,
   .panel-link,
-  .player-card__track,
-  .lyric-bar,
   .module-chip,
   .theme-card__colors,
   .theme-card__colors div {
@@ -885,7 +742,6 @@ const dashboardItems = [
   .post-card p,
   .chatter-card p,
   .module-chip small,
-  .player-card__track span,
   .dashboard-stat span {
     color: rgb(var(--home-muted) / 0.9);
   }
@@ -919,7 +775,6 @@ const dashboardItems = [
   .profile-card__socials a,
   .home-action,
   .panel-link,
-  .player-toggle,
   .theme-card__modes button,
   .theme-card__colors button {
     border: 1px solid rgb(var(--home-border) / 0.36);
@@ -934,7 +789,6 @@ const dashboardItems = [
   }
 
   .profile-card__socials a,
-  .player-toggle,
   .theme-card__colors button {
     display: inline-flex;
     align-items: center;
@@ -980,7 +834,6 @@ const dashboardItems = [
   .profile-card__socials a:hover,
   .home-action:hover,
   .panel-link:hover,
-  .player-toggle:hover,
   .theme-card__modes button:hover,
   .theme-card__colors button:hover,
   .module-chip:hover,
@@ -1048,102 +901,6 @@ const dashboardItems = [
     min-height: 2.1rem;
     padding: 0 0.75rem;
     font-size: 0.84rem;
-    white-space: nowrap;
-  }
-
-  .player-toggle {
-    width: 2.8rem;
-    height: 2.8rem;
-    color: white;
-    background: rgb(var(--color-brand-600) / 0.92);
-    cursor: pointer;
-  }
-
-  .player-toggle__pause,
-  .player-card.is-playing .player-toggle__play {
-    display: none;
-  }
-
-  .player-card.is-playing .player-toggle__pause {
-    display: block;
-  }
-
-  .player-card__track {
-    gap: 0.72rem;
-    min-width: 0;
-  }
-
-  .player-card__disc {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.6rem;
-    height: 2.6rem;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    color: rgb(var(--color-brand-700));
-    background: rgb(var(--color-brand-100) / 0.62);
-  }
-
-  :global(html[data-theme="dark"]) .player-card__disc {
-    color: rgb(var(--color-brand-200));
-    background: rgb(var(--color-brand-900) / 0.48);
-  }
-
-  .player-card__track div {
-    display: grid;
-    min-width: 0;
-    gap: 0.12rem;
-  }
-
-  .player-card__track strong,
-  .player-card__track span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .player-progress {
-    --progress: 0%;
-    height: 0.45rem;
-    margin-top: 0.95rem;
-    overflow: hidden;
-    border-radius: 999px;
-    background: rgb(var(--home-chip) / 0.32);
-  }
-
-  .player-progress span {
-    display: block;
-    width: var(--progress);
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(
-      90deg,
-      rgb(var(--color-brand-400)),
-      rgb(var(--color-brand-700))
-    );
-    transition: width 0.2s ease;
-  }
-
-  .lyric-bar {
-    gap: 0.45rem;
-    min-height: 2.5rem;
-    margin-top: 0.75rem;
-    border: 1px solid rgb(var(--home-border) / 0.24);
-    border-radius: 0.85rem;
-    padding: 0.55rem 0.7rem;
-    background: rgb(var(--home-chip) / 0.22);
-    color: rgb(var(--home-muted));
-  }
-
-  .lyric-bar p {
-    min-width: 0;
-    margin: 0;
-    overflow: hidden;
-    color: rgb(var(--home-ink));
-    font-size: 0.86rem;
-    font-weight: 700;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -1422,7 +1179,6 @@ const dashboardItems = [
 
     .profile-card,
     .search-card,
-    .player-card,
     .posts-carousel,
     .chatter-carousel,
     .theme-card,

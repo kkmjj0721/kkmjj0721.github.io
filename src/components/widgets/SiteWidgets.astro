@@ -1,0 +1,918 @@
+---
+import { Icon } from "astro-icon/components";
+import { defaultBgmTrack } from "@data/bgm";
+import type { Lang } from "@i18n/ui";
+
+export interface Props {
+  lang?: Lang;
+}
+
+const { lang = "zh" } = Astro.props;
+const copy =
+  lang === "zh"
+    ? {
+        backToTop: "回到顶部",
+        cookieText:
+          "本站会在浏览器 localStorage 中保存主题、颜色、提示确认等本地偏好；配置后，评论会在点击入口时加载；嵌入媒体可能在接近视口时 lazy-load，第三方服务会按其政策接收请求。",
+        cookieAccept: "知道了",
+        doodleTitle: "随手涂鸦",
+        doodleClose: "关闭涂鸦板",
+        doodleDownload: "下载涂鸦",
+        doodleClear: "清空涂鸦",
+        bgmPlay: "播放背景音乐",
+        bgmPause: "暂停背景音乐",
+      }
+    : {
+        backToTop: "Back to top",
+        cookieText:
+          "This site saves local preferences such as theme, color, and notice state in browser localStorage; when configured, comments load after you click the entry point; embedded media may lazy-load near the viewport, and third-party providers may receive requests under their own policies.",
+        cookieAccept: "Got it",
+        doodleTitle: "Doodle Pad",
+        doodleClose: "Close doodle pad",
+        doodleDownload: "Download doodle",
+        doodleClear: "Clear doodle",
+        bgmPlay: "Play background music",
+        bgmPause: "Pause background music",
+      };
+const bgmTrack =
+  defaultBgmTrack.enabled &&
+  defaultBgmTrack.licenseStatus === "verified" &&
+  defaultBgmTrack.provenanceUrl
+    ? defaultBgmTrack
+    : undefined;
+---
+
+<div class="site-widgets" data-site-widgets data-pagefind-ignore>
+  <canvas
+    class="site-widgets__effects"
+    data-effects-canvas
+    aria-hidden="true"
+  ></canvas>
+
+  <button
+    class="site-widgets__back-to-top glass-pill"
+    type="button"
+    data-back-to-top
+    aria-label={copy.backToTop}
+    hidden
+  >
+    <Icon name="mdi:arrow-up" class="h-5 w-5" />
+  </button>
+
+  <section
+    class="site-widgets__cookie glass-strong"
+    data-cookie-consent
+    aria-live="polite"
+    hidden
+  >
+    <Icon name="mdi:cookie-outline" class="h-5 w-5 shrink-0" />
+    <p>{copy.cookieText}</p>
+    <button type="button" data-cookie-accept>{copy.cookieAccept}</button>
+  </section>
+
+  <section
+    class="site-widgets__doodle"
+    data-doodle-modal
+    aria-hidden="true"
+    hidden
+  >
+    <button
+      class="site-widgets__doodle-backdrop"
+      type="button"
+      data-doodle-close
+      aria-label={copy.doodleClose}
+      tabindex="-1"
+    ></button>
+    <div
+      class="site-widgets__doodle-panel glass-strong"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="site-doodle-title"
+    >
+      <header class="site-widgets__doodle-header">
+        <h2 id="site-doodle-title">{copy.doodleTitle}</h2>
+        <div class="site-widgets__doodle-actions">
+          <button
+            type="button"
+            data-doodle-download
+            aria-label={copy.doodleDownload}
+          >
+            <Icon name="mdi:download" class="h-5 w-5" />
+          </button>
+          <button type="button" data-doodle-clear aria-label={copy.doodleClear}>
+            <Icon name="mdi:eraser" class="h-5 w-5" />
+          </button>
+          <button type="button" data-doodle-close aria-label={copy.doodleClose}>
+            <Icon name="mdi:close" class="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+      <canvas
+        class="site-widgets__doodle-canvas"
+        data-doodle-canvas
+        tabindex="0"
+      ></canvas>
+    </div>
+  </section>
+
+  {
+    bgmTrack && (
+      <section
+        class="site-widgets__bgm glass"
+        data-bgm-player
+        data-track-src={bgmTrack.src}
+      >
+        <audio data-bgm-audio src={bgmTrack.src} preload="metadata"></audio>
+        <button
+          type="button"
+          data-bgm-toggle
+          data-play-label={copy.bgmPlay}
+          data-pause-label={copy.bgmPause}
+          aria-label={copy.bgmPlay}
+        >
+          <Icon name="mdi:play" class="h-5 w-5" data-bgm-play-icon />
+          <Icon name="mdi:pause" class="hidden h-5 w-5" data-bgm-pause-icon />
+        </button>
+        <div class="site-widgets__bgm-meta">
+          <p>{bgmTrack.title}</p>
+          <span>{bgmTrack.artist}</span>
+          <div class="site-widgets__bgm-progress" aria-hidden="true">
+            <span data-bgm-progress></span>
+          </div>
+        </div>
+      </section>
+    )
+  }
+</div>
+
+<script>
+  const WIDGET_STATE_KEY = "__blogSiteWidgetsState";
+  const COOKIE_KEY = "blog:cookie-consent";
+
+  function getWidgetState() {
+    window[WIDGET_STATE_KEY] = window[WIDGET_STATE_KEY] ?? {
+      bound: false,
+      cleanup: () => {},
+    };
+    return window[WIDGET_STATE_KEY];
+  }
+
+  function isEditableTarget(target) {
+    if (!(target instanceof Element)) return false;
+    return Boolean(
+      target.closest("input, textarea, select, [contenteditable='true']"),
+    );
+  }
+
+  function getBrandColor(alpha = 1) {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-brand")
+      .trim();
+    return `rgb(${raw || "124 58 237"} / ${alpha})`;
+  }
+
+  function initSiteWidgets() {
+    const state = getWidgetState();
+    state.cleanup();
+
+    const cleanupCallbacks = [];
+    const addCleanup = (cleanup) => cleanupCallbacks.push(cleanup);
+    const addListener = (target, event, handler, options) => {
+      target.addEventListener(event, handler, options);
+      addCleanup(() => target.removeEventListener(event, handler, options));
+    };
+
+    state.cleanup = () => {
+      while (cleanupCallbacks.length > 0) {
+        const cleanup = cleanupCallbacks.pop();
+        if (typeof cleanup === "function") cleanup();
+      }
+      state.cleanup = () => {};
+    };
+
+    const root = document.querySelector("[data-site-widgets]");
+    if (!root) return;
+
+    initBackToTop(root, addListener, addCleanup);
+    initCookieConsent(root, addListener);
+    initDoodle(root, addListener, addCleanup);
+    initBgmPlayer(root, addListener, addCleanup);
+    initPointerEffects(root, addListener, addCleanup);
+  }
+
+  function initBackToTop(root, addListener, addCleanup) {
+    const button = root.querySelector("[data-back-to-top]");
+    if (!(button instanceof HTMLButtonElement)) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const visible = window.scrollY > 600;
+      button.hidden = !visible;
+      button.setAttribute("aria-hidden", String(!visible));
+    };
+    const scheduleUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(update);
+    };
+
+    addListener(document, "scroll", scheduleUpdate, { passive: true });
+    addListener(window, "resize", scheduleUpdate);
+    addListener(button, "click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    addCleanup(() => {
+      if (frame) window.cancelAnimationFrame(frame);
+    });
+    update();
+  }
+
+  function initCookieConsent(root, addListener) {
+    const banner = root.querySelector("[data-cookie-consent]");
+    const button = root.querySelector("[data-cookie-accept]");
+    if (!(banner instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    try {
+      banner.hidden = localStorage.getItem(COOKIE_KEY) === "accepted";
+    } catch {
+      banner.hidden = false;
+    }
+
+    addListener(button, "click", () => {
+      try {
+        localStorage.setItem(COOKIE_KEY, "accepted");
+      } catch {}
+      banner.hidden = true;
+    });
+  }
+
+  function initDoodle(root, addListener, addCleanup) {
+    const modal = root.querySelector("[data-doodle-modal]");
+    const panel = root.querySelector(".site-widgets__doodle-panel");
+    const canvas = root.querySelector("[data-doodle-canvas]");
+    const closeButtons = root.querySelectorAll("[data-doodle-close]");
+    const downloadButton = root.querySelector("[data-doodle-download]");
+    const clearButton = root.querySelector("[data-doodle-clear]");
+    if (
+      !(modal instanceof HTMLElement) ||
+      !(panel instanceof HTMLElement) ||
+      !(canvas instanceof HTMLCanvasElement)
+    ) {
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let restoreFocusTo = null;
+
+    const focusElement = (element) => {
+      try {
+        element.focus({ preventScroll: true });
+      } catch {
+        element.focus();
+      }
+    };
+
+    const isUsableFocusTarget = (element) => {
+      if (!(element instanceof HTMLElement)) return false;
+      if (element.hidden || element.closest("[hidden]")) return false;
+      if (element.getAttribute("aria-hidden") === "true") return false;
+      if (element instanceof HTMLButtonElement && element.disabled) return false;
+      return true;
+    };
+
+    const getFocusTargets = () =>
+      Array.from(
+        panel.querySelectorAll(
+          "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+        ),
+      ).filter(isUsableFocusTarget);
+
+    const sizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = getBrandColor(0.9);
+    };
+
+    const pointFromEvent = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
+    };
+
+    const clearCanvas = () => {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    };
+
+    const open = () => {
+      if (!modal.hidden) return;
+      restoreFocusTo =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      modal.hidden = false;
+      modal.setAttribute("aria-hidden", "false");
+      window.setTimeout(() => {
+        if (modal.hidden) return;
+        sizeCanvas();
+        focusElement(canvas);
+      }, 0);
+    };
+
+    const close = ({ restoreFocus = true } = {}) => {
+      const wasOpen = !modal.hidden;
+      drawing = false;
+      modal.hidden = true;
+      modal.setAttribute("aria-hidden", "true");
+      if (
+        wasOpen &&
+        restoreFocus &&
+        restoreFocusTo instanceof HTMLElement &&
+        document.contains(restoreFocusTo)
+      ) {
+        focusElement(restoreFocusTo);
+      }
+      restoreFocusTo = null;
+    };
+
+    addListener(document, "keydown", (event) => {
+      const opensDoodle =
+        (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d";
+      if (!opensDoodle || isEditableTarget(event.target)) return;
+      event.preventDefault();
+      if (modal.hidden) open();
+    });
+
+    addListener(document, "keydown", (event) => {
+      if (modal.hidden) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusTargets = getFocusTargets();
+      if (focusTargets.length === 0) {
+        event.preventDefault();
+        focusElement(canvas);
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      const currentIndex = focusTargets.indexOf(activeElement);
+      const lastIndex = focusTargets.length - 1;
+      const nextIndex = event.shiftKey
+        ? currentIndex <= 0
+          ? lastIndex
+          : currentIndex - 1
+        : currentIndex < 0 || currentIndex >= lastIndex
+          ? 0
+          : currentIndex + 1;
+
+      if (
+        currentIndex < 0 ||
+        (event.shiftKey && currentIndex === 0) ||
+        (!event.shiftKey && currentIndex === lastIndex)
+      ) {
+        event.preventDefault();
+        focusElement(focusTargets[nextIndex]);
+      }
+    });
+
+    addListener(document, "focusin", (event) => {
+      if (modal.hidden) return;
+      if (event.target instanceof Node && modal.contains(event.target)) return;
+      const focusTargets = getFocusTargets();
+      focusElement(focusTargets[0] ?? canvas);
+    });
+
+    closeButtons.forEach((button) => {
+      addListener(button, "click", () => close());
+    });
+
+    addListener(window, "resize", () => {
+      if (!modal.hidden) sizeCanvas();
+    });
+
+    addListener(canvas, "pointerdown", (event) => {
+      if (modal.hidden) return;
+      drawing = true;
+      const point = pointFromEvent(event);
+      lastX = point.x;
+      lastY = point.y;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    addListener(canvas, "pointermove", (event) => {
+      if (!drawing || modal.hidden) return;
+      const point = pointFromEvent(event);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+      lastX = point.x;
+      lastY = point.y;
+    });
+
+    const stopDrawing = (event) => {
+      drawing = false;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    };
+    addListener(canvas, "pointerup", stopDrawing);
+    addListener(canvas, "pointercancel", stopDrawing);
+
+    if (downloadButton instanceof HTMLButtonElement) {
+      addListener(downloadButton, "click", () => {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "doodle.png";
+          link.click();
+          URL.revokeObjectURL(url);
+        });
+      });
+    }
+
+    if (clearButton instanceof HTMLButtonElement) {
+      addListener(clearButton, "click", clearCanvas);
+    }
+
+    addCleanup(() => close({ restoreFocus: false }));
+  }
+
+  function initBgmPlayer(root, addListener, addCleanup) {
+    const player = root.querySelector("[data-bgm-player]");
+    const audio = root.querySelector("[data-bgm-audio]");
+    const toggle = root.querySelector("[data-bgm-toggle]");
+    const playIcon = root.querySelector("[data-bgm-play-icon]");
+    const pauseIcon = root.querySelector("[data-bgm-pause-icon]");
+    const progress = root.querySelector("[data-bgm-progress]");
+    if (
+      !(player instanceof HTMLElement) ||
+      !(audio instanceof HTMLAudioElement) ||
+      !(toggle instanceof HTMLButtonElement)
+    ) {
+      return;
+    }
+
+    const trackSrc = player.dataset.trackSrc;
+    if (trackSrc && !audio.getAttribute("src")) {
+      audio.src = trackSrc;
+    }
+
+    const setPlaying = (isPlaying) => {
+      playIcon?.classList.toggle("hidden", isPlaying);
+      pauseIcon?.classList.toggle("hidden", !isPlaying);
+      toggle.setAttribute(
+        "aria-label",
+        isPlaying
+          ? toggle.dataset.pauseLabel || "Pause background music"
+          : toggle.dataset.playLabel || "Play background music",
+      );
+      player.classList.toggle("is-playing", isPlaying);
+    };
+
+    const syncProgress = () => {
+      if (!(progress instanceof HTMLElement)) return;
+      const ratio =
+        audio.duration > 0 && Number.isFinite(audio.duration)
+          ? audio.currentTime / audio.duration
+          : 0;
+      progress.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+    };
+
+    addListener(toggle, "click", async () => {
+      if (audio.paused) {
+        try {
+          await audio.play();
+        } catch {
+          setPlaying(false);
+        }
+      } else {
+        audio.pause();
+      }
+    });
+    addListener(audio, "play", () => setPlaying(true));
+    addListener(audio, "pause", () => setPlaying(false));
+    addListener(audio, "ended", () => setPlaying(false));
+    addListener(audio, "timeupdate", syncProgress);
+    addListener(audio, "loadedmetadata", syncProgress);
+
+    setPlaying(false);
+    syncProgress();
+    addCleanup(() => {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    });
+  }
+
+  function initPointerEffects(root, addListener, addCleanup) {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motionQuery.matches) return;
+
+    const canvas = root.querySelector("[data-effects-canvas]");
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let ratio = Math.min(window.devicePixelRatio || 1, 2);
+    let frame = 0;
+    let lastTrailAt = 0;
+    const particles = [];
+
+    const resize = () => {
+      ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * ratio);
+      canvas.height = Math.floor(window.innerHeight * ratio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const addParticle = (x, y, options = {}) => {
+      particles.push({
+        x,
+        y,
+        vx: options.vx ?? (Math.random() - 0.5) * 1.4,
+        vy: options.vy ?? (Math.random() - 0.5) * 1.4,
+        born: performance.now(),
+        life: options.life ?? 520,
+        radius: options.radius ?? 3,
+        color: options.color ?? getBrandColor(0.72),
+      });
+      if (particles.length > 90) particles.splice(0, particles.length - 90);
+      if (!frame) frame = window.requestAnimationFrame(draw);
+    };
+
+    const draw = (now) => {
+      frame = 0;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      for (let index = particles.length - 1; index >= 0; index -= 1) {
+        const particle = particles[index];
+        const age = now - particle.born;
+        const progress = age / particle.life;
+        if (progress >= 1) {
+          particles.splice(index, 1);
+          continue;
+        }
+
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.018;
+
+        ctx.globalAlpha = 1 - progress;
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(
+          particle.x,
+          particle.y,
+          particle.radius * (1 - progress * 0.55),
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+      if (particles.length > 0) frame = window.requestAnimationFrame(draw);
+    };
+
+    addListener(document, "pointermove", (event) => {
+      const now = performance.now();
+      if (now - lastTrailAt < 28) return;
+      lastTrailAt = now;
+      addParticle(event.clientX, event.clientY, {
+        life: 430,
+        radius: 2.2,
+        color: getBrandColor(0.45),
+      });
+    });
+
+    addListener(document, "click", (event) => {
+      if (event.target instanceof Element && event.target.closest("[data-doodle-modal]")) {
+        return;
+      }
+      for (let i = 0; i < 18; i += 1) {
+        const angle = (Math.PI * 2 * i) / 18;
+        const speed = 1.8 + Math.random() * 1.8;
+        addParticle(event.clientX, event.clientY, {
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 720,
+          radius: 2.6 + Math.random() * 1.8,
+          color: getBrandColor(0.78),
+        });
+      }
+    });
+
+    addListener(window, "resize", resize);
+    addCleanup(() => {
+      if (frame) window.cancelAnimationFrame(frame);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    });
+    resize();
+  }
+
+  const widgetState = getWidgetState();
+  if (!widgetState.bound) {
+    document.addEventListener("astro:page-load", initSiteWidgets);
+    document.addEventListener("astro:before-swap", () => {
+      getWidgetState().cleanup();
+    });
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (typeof reducedMotionQuery.addEventListener === "function") {
+      reducedMotionQuery.addEventListener("change", initSiteWidgets);
+    } else if (typeof reducedMotionQuery.addListener === "function") {
+      reducedMotionQuery.addListener(initSiteWidgets);
+    }
+    widgetState.bound = true;
+  }
+
+  initSiteWidgets();
+</script>
+
+<style>
+  .site-widgets {
+    pointer-events: none;
+  }
+
+  .site-widgets__effects {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    pointer-events: none;
+  }
+
+  .site-widgets__back-to-top,
+  .site-widgets__bgm,
+  .site-widgets__cookie,
+  .site-widgets__doodle {
+    pointer-events: auto;
+  }
+
+  .site-widgets__back-to-top {
+    position: fixed;
+    right: 1rem;
+    bottom: 5.25rem;
+    z-index: 48;
+    display: inline-flex;
+    height: 2.75rem;
+    width: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--color-ink));
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .site-widgets__back-to-top:hover {
+    transform: translateY(-2px);
+  }
+
+  .site-widgets__back-to-top[hidden],
+  .site-widgets__cookie[hidden],
+  .site-widgets__doodle[hidden] {
+    display: none;
+  }
+
+  .site-widgets__cookie {
+    position: fixed;
+    right: 12rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 60;
+    display: flex;
+    max-width: 38rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    color: rgb(var(--color-ink));
+    font-size: 0.875rem;
+  }
+
+  .site-widgets__cookie p {
+    margin: 0;
+    flex: 1;
+    color: rgb(var(--color-muted));
+    line-height: 1.5;
+  }
+
+  .site-widgets__cookie button,
+  .site-widgets__doodle-actions button,
+  .site-widgets__bgm button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(var(--glass-border) / 0.3);
+    border-radius: 9999px;
+    background: rgb(var(--color-brand) / 0.12);
+    color: rgb(var(--color-ink));
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .site-widgets__cookie button {
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    font-weight: 700;
+  }
+
+  .site-widgets__cookie button:hover,
+  .site-widgets__doodle-actions button:hover,
+  .site-widgets__bgm button:hover {
+    background: rgb(var(--color-brand) / 0.2);
+    color: rgb(var(--color-brand-700));
+    transform: translateY(-1px);
+  }
+
+  .site-widgets__doodle {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+
+  .site-widgets__doodle-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgb(15 23 42 / 0.45);
+  }
+
+  .site-widgets__doodle-panel {
+    position: relative;
+    display: grid;
+    height: min(78svh, 42rem);
+    width: min(54rem, 100%);
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    color: rgb(var(--color-ink));
+  }
+
+  .site-widgets__doodle-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgb(var(--glass-border) / 0.24);
+    padding: 1rem;
+  }
+
+  .site-widgets__doodle-header h2,
+  .site-widgets__bgm p,
+  .site-widgets__bgm span {
+    margin: 0;
+  }
+
+  .site-widgets__doodle-header h2 {
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .site-widgets__doodle-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .site-widgets__doodle-actions button {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .site-widgets__doodle-canvas {
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    background:
+      linear-gradient(rgb(var(--color-surface) / 0.84), rgb(var(--color-surface) / 0.84)),
+      radial-gradient(circle at center, rgb(var(--color-brand) / 0.1), transparent 60%);
+    outline: none;
+    touch-action: none;
+  }
+
+  .site-widgets__bgm {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 49;
+    display: grid;
+    width: min(10.5rem, calc(100vw - 2rem));
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem;
+    color: rgb(var(--color-ink));
+  }
+
+  .site-widgets__bgm button {
+    height: 2.35rem;
+    width: 2.35rem;
+  }
+
+  .site-widgets__bgm-meta {
+    min-width: 0;
+  }
+
+  .site-widgets__bgm p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .site-widgets__bgm span {
+    display: block;
+    overflow: hidden;
+    color: rgb(var(--color-muted));
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+  }
+
+  .site-widgets__bgm-progress {
+    margin-top: 0.35rem;
+    height: 0.18rem;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: rgb(var(--color-brand) / 0.16);
+  }
+
+  .site-widgets__bgm-progress span {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: rgb(var(--color-brand) / 0.75);
+  }
+
+  :global([data-theme="dark"]) .site-widgets__cookie button:hover,
+  :global([data-theme="dark"]) .site-widgets__doodle-actions button:hover,
+  :global([data-theme="dark"]) .site-widgets__bgm button:hover {
+    color: rgb(var(--color-brand-300));
+  }
+
+  @media (max-width: 640px) {
+    .site-widgets__cookie {
+      right: 0.75rem;
+      bottom: 5.55rem;
+      left: 0.75rem;
+      max-width: none;
+      align-items: flex-start;
+    }
+
+    .site-widgets__bgm {
+      right: 0.75rem;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      width: auto;
+    }
+
+    .site-widgets__back-to-top {
+      right: 0.75rem;
+      bottom: 5.1rem;
+    }
+
+    .site-widgets__doodle-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-widgets__effects {
+      display: none;
+    }
+  }
+</style>

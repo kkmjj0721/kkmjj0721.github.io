@@ -3,6 +3,7 @@ import { ClientRouter } from "astro:transitions";
 import Header from "@components/layout/Header.astro";
 import Footer from "@components/layout/Footer.astro";
 import SharedBackground from "@components/layout/SharedBackground.astro";
+import SiteWidgets from "@components/widgets/SiteWidgets.astro";
 import { site } from "@data/site";
 import { getLangFromUrl, defaultLang } from "@i18n/ui";
 import "@styles/global.css";
@@ -153,5 +154,6 @@ const canonical = new URL(Astro.url.pathname, site.siteUrl).toString();
     </main>
 
     {!hideFooter && <Footer />}
+    <SiteWidgets lang={lang} />
   </body>
 </html>

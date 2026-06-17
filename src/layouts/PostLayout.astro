@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import type { CollectionEntry } from 'astro:content';
 import Comments from '@components/post/Comments.astro';
+import LikeButton from '@components/post/LikeButton.astro';
 import TableOfContents from '@components/post/TableOfContents.astro';
 import SeriesSidebar from '@components/post/SeriesSidebar.astro';
 import { formatDate, getSeriesPosts, postUrl } from '@utils/posts';
@@ -80,7 +81,7 @@ const commentsEnabled = post.data.comments !== false;
     'mb-8',
     showSidebar && 'xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-6 xl:items-start',
   ]}>
-    <article class="glass p-6 md:p-10">
+    <article class="glass p-6 md:p-10" data-post-article>
       <!-- 标题区 -->
       <header class="mb-8 pb-6 border-b border-brand-200/30">
         {post.data.cover && (
@@ -124,6 +125,8 @@ const commentsEnabled = post.data.comments !== false;
       <div class="prose-glass">
         <Fragment set:html={contentHtml} />
       </div>
+
+      <LikeButton lang={lang} />
 
       <!-- 标签 -->
       {post.data.tags.length > 0 && (
@@ -197,7 +200,21 @@ const commentsEnabled = post.data.comments !== false;
 
   <!-- 阅读进度条、TOC scrollspy 与 Mermaid 按需渲染 -->
   <script>
-    let cleanupPostEnhancements = () => {};
+    const POST_ENHANCEMENTS_STATE_KEY = '__blogPostEnhancementsState';
+
+    function getPostEnhancementsState() {
+      window[POST_ENHANCEMENTS_STATE_KEY] = window[POST_ENHANCEMENTS_STATE_KEY] ?? {
+        bound: false,
+        cleanup: () => {},
+      };
+      return window[POST_ENHANCEMENTS_STATE_KEY];
+    }
+
+    function cleanupPostEnhancements() {
+      const state = getPostEnhancementsState();
+      state.cleanup();
+      state.cleanup = () => {};
+    }
 
     function initReadingProgress() {
       const bar = document.getElementById('reading-progress');
@@ -280,6 +297,75 @@ const commentsEnabled = post.data.comments !== false;
       };
     }
 
+    function initReadingPosition() {
+      const article = document.querySelector('[data-post-article]');
+      if (!article) return () => {};
+
+      const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+      const storageKey = `blog:post-scroll:${pathname}`;
+      let saveTimer = 0;
+      let restoreTimer = 0;
+      let restoreSettled = Boolean(window.location.hash);
+
+      const readSavedPosition = () => {
+        try {
+          const saved = localStorage.getItem(storageKey);
+          if (!saved) return null;
+          const parsed = JSON.parse(saved);
+          return typeof parsed?.y === 'number' ? parsed : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const savePosition = () => {
+        try {
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify({
+              y: window.scrollY,
+              max: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
+              savedAt: Date.now(),
+            }),
+          );
+        } catch {}
+      };
+
+      const scheduleSave = () => {
+        if (saveTimer) return;
+        saveTimer = window.setTimeout(() => {
+          saveTimer = 0;
+          savePosition();
+        }, 500);
+      };
+
+      if (!window.location.hash) {
+        restoreTimer = window.setTimeout(() => {
+          restoreTimer = 0;
+          const saved = readSavedPosition();
+          if (saved && saved.y >= 120) {
+            const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            window.scrollTo({ top: Math.min(saved.y, max), behavior: 'auto' });
+          }
+          restoreSettled = true;
+        }, 80);
+      }
+
+      document.addEventListener('scroll', scheduleSave, { passive: true });
+      window.addEventListener('beforeunload', savePosition);
+
+      return () => {
+        if (saveTimer) {
+          window.clearTimeout(saveTimer);
+          saveTimer = 0;
+        }
+        if (restoreTimer) window.clearTimeout(restoreTimer);
+        if (restoreSettled || window.scrollY > 0) savePosition();
+        document.removeEventListener('scroll', scheduleSave);
+        window.removeEventListener('beforeunload', savePosition);
+      };
+    }
+
     function getCodeSource(sourceNode, container) {
       const copySource = container.querySelector('[data-code]')?.getAttribute('data-code');
       if (copySource) return copySource.replace(/\u007f/g, '\n').trim();
@@ -356,12 +442,19 @@ const commentsEnabled = post.data.comments !== false;
 
     function initPostEnhancements() {
       cleanupPostEnhancements();
-      const cleanups = [initReadingProgress(), initScrollSpy()];
-      cleanupPostEnhancements = () => cleanups.forEach((cleanup) => cleanup());
+      const state = getPostEnhancementsState();
+      const cleanups = [initReadingProgress(), initScrollSpy(), initReadingPosition()];
+      state.cleanup = () => cleanups.forEach((cleanup) => cleanup());
       renderMermaidBlocks();
     }
 
-    document.addEventListener('astro:page-load', initPostEnhancements);
+    const postEnhancementsState = getPostEnhancementsState();
+    if (!postEnhancementsState.bound) {
+      document.addEventListener('astro:page-load', initPostEnhancements);
+      document.addEventListener('astro:before-swap', cleanupPostEnhancements);
+      postEnhancementsState.bound = true;
+    }
+
     initPostEnhancements();
   </script>
 </BaseLayout>

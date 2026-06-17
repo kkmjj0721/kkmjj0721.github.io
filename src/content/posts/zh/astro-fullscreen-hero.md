@@ -24,14 +24,14 @@ iOS Safari 会把地址栏的高度也算进 `100vh`，导致 100vh 比实际可
 
 ## 坑 2: Fixed header 占位条把内容推下去了
 
-我的 Header 是 `position: fixed`，所以在它后面放了个 `<div class="h-24"></div>` 占位，防止下面的内容被遮挡。但这样 hero 就被向下推了 6rem。
+我的 Header 是 `position: fixed`，所以在它后面放了个占位，防止下面的内容被遮挡。但这样 hero 就被向下推了 3rem。
 
 解决：让 hero 用负 margin 把自己拉回去：
 
 ```css
 .hero {
   height: 100svh;
-  margin-top: -6rem;
+  margin-top: -3rem;
 }
 ```
 
@@ -59,7 +59,7 @@ iOS Safari 会把地址栏的高度也算进 `100vh`，导致 100vh 比实际可
 <style>
   .hero {
     height: 100svh;
-    margin-top: -6rem;
+    margin-top: -3rem;
     position: relative;
     overflow: hidden;
   }

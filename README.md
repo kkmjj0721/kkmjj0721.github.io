@@ -24,7 +24,7 @@ npm run preview
 src/
 ├── content/        # 9 个 Content Collections（posts/moments/gallery/...）
 ├── components/     # UI 组件
-├── layouts/        # 页面布局
+├── layouts/        # 页面布局（BaseLayout 挂载全站 SharedBackground）
 ├── pages/          # 路由页面
 ├── data/site.ts    # 站点元数据（改这里！）
 ├── i18n/           # 中英双语
@@ -32,8 +32,8 @@ src/
 └── utils/          # 工具函数
 
 public/
-├── images/         # 所有图片资源（占位图在 placeholders/）
-├── audio/bgm/      # BGM 音乐文件
+├── images/         # 所有图片资源（占位图在 placeholders/，全站背景视频/poster 在 backgrounds/）
+├── audio/bgm/      # 用户提供/待替换 BGM 资源；默认不在首页 UI 暴露
 └── fonts/          # 本地字体
 ```
 
@@ -49,15 +49,15 @@ public/
 
 ### 3. 改主色
 
-访问首页右上角的 🎨 图标 → 从 6 个预设色中选择，或用自定义色。颜色会保存到 localStorage。
+首页 `HomeDashboard` 的“界面偏好”面板提供品牌色预设色块；当前没有自定义颜色输入，也没有 Header 主色控制。选择会保存到 localStorage。
 
 ### 4. 切换深色/浅色模式
 
-点击右上角的 🌙/☀️ 图标。
+首页 `HomeDashboard` 的“界面偏好”面板提供亮色 / 暗色 / 自动按钮；当前 Header 只包含导航和移动端菜单。
 
 ### 5. 中英文切换
 
-点击右上角的 EN/中 按钮。
+中文默认路由是 `/`，英文路由是 `/en/`；当前 Header 没有语言切换按钮。
 
 ## ✍️ 写文章
 
@@ -89,11 +89,19 @@ draft: false
 ## 🧩 阶段路线图
 
 - [x] Phase 1: 骨架与脚手架
-- [ ] Phase 2: 内容系统（文章 / 标签 / 归档 / RSS）
-- [ ] Phase 3: 文章功能（TOC / KaTeX / Mermaid / Admonitions）
-- [ ] Phase 4: 互动控件（拾色器 / 烟花 / BGM / 涂鸦）
-- [ ] Phase 5: 模块页面（相册 / 追番 / 友链 / 项目）
-- [ ] Phase 6: 搜索 / 评论 / CI / 部署
+- [x] Phase 2: 内容系统（文章 / 标签 / 归档 / RSS）
+- [x] Phase 3: 文章功能（TOC / KaTeX / Mermaid / Admonitions / 嵌入组件 / 系列文章）
+- [x] Phase 4: 互动控件与视觉打磨（主题、主色、BackToTop、点赞、Cookie、指针动效、阅读位置、涂鸦板、隐私页、移动菜单焦点陷阱已实现；BGM 资源保留但首页播放 UI 默认关闭，待来源/授权确认或替换后再启用）
+- [x] Phase 5: 模块页面路由（相册 / 动态 / 追番 / 游戏 / 读书 / 电影 / 友链 / 项目 / 关于；真实内容仍待替换）
+- [x] Phase 6: 搜索 / 评论 / CI / 部署（Pagefind、受保护的 Giscus 入口、npm 脚本、GitHub Actions 已实现；真实 Giscus ID 和私有配置仍需用户提供）
+
+## 🔧 自动化与私有配置状态
+
+- 已有 npm 脚本：`new` / `new:moment` / `new:gallery` / `compress` / `subset-fonts` / `check:images` / `lint` / `build`
+- 已有 GitHub Actions：`deploy.yml`、`checks.yml`、`pr-preview.yml`，均使用 npm
+- 仍需用户替换：`TODO(content)` 个人信息、占位图片、真实社交/邮箱、Giscus `repoId` / `categoryId` / `guestbookCategoryId`
+- 当前实现会在 Giscus 未配置时显示保护提示，不会加载无效评论脚本
+- 发布验证：`npm run lint`、`npm run build`、路由检查、widgets/like button、BGM HTML 排除、reduced-motion/search focus/stale sweep 均已通过
 
 ## 📚 进一步阅读
 

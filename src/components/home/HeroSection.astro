@@ -6,37 +6,46 @@
  *   把图片放到 public/images/heroes/，文件名添加到 heroPool 里即可
  * TODO(image): 替换 hero-*.placeholder.svg 为真实图片（推荐 1920x1080 webp）
  */
-import { site } from '@data/site';
-import { getLangFromUrl, useTranslations } from '@i18n/ui';
+import { site } from "@data/site";
+import { getLangFromUrl, useTranslations } from "@i18n/ui";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 // TODO(image): 在 public/images/heroes/ 中放入图片后，把文件名加到这里
 const heroPool = [
-  '/images/placeholders/hero-01.placeholder.svg',
-  '/images/placeholders/hero-02.placeholder.svg',
-  '/images/placeholders/hero-03.placeholder.svg',
+  "/images/placeholders/hero-01.placeholder.svg",
+  "/images/placeholders/hero-02.placeholder.svg",
+  "/images/placeholders/hero-03.placeholder.svg",
 ];
 ---
 
-<section class="hero-fullscreen relative flex items-center justify-center overflow-hidden">
+<section
+  class="hero-fullscreen relative flex items-center justify-center overflow-hidden"
+>
   <div
     id="hero-bg"
     class="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
     style={`background-image: url(${heroPool[0]})`}
-  ></div>
+  >
+  </div>
 
   <!-- 仅在文字区放一层轻量径向蒙层，提升可读性，不遮挡背景图整体 -->
-  <div class="absolute inset-0 pointer-events-none"
-       style="background: radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, transparent 60%);">
+  <div
+    class="absolute inset-0 pointer-events-none"
+    style="background: radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, transparent 60%);"
+  >
   </div>
 
   <div class="relative z-10 text-center px-4">
-    <p class="text-sm md:text-base text-white/85 mb-3 font-semibold tracking-wider uppercase drop-shadow">
-      {t('home.welcome')}
+    <p
+      class="text-sm md:text-base text-white/85 mb-3 font-semibold tracking-wider uppercase drop-shadow"
+    >
+      {t("home.welcome")}
     </p>
-    <h1 class="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg text-white">
+    <h1
+      class="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg text-white"
+    >
       {site.title[lang]}
     </h1>
     <p
@@ -45,31 +54,33 @@ const heroPool = [
       data-text-1={site.subtitle[lang]}
       data-text-2={site.author.bio[lang]}
     >
-      <span id="type-target" aria-live="polite"></span><span class="opacity-70 animate-pulse">▍</span>
+      <span id="type-target" aria-live="polite"></span><span
+        class="opacity-70 animate-pulse">▍</span
+      >
     </p>
   </div>
 </section>
 
 <style>
-  /* 单屏 hero：占满整个视口，用负 margin 抵消 Header 后面的 h-24 占位 */
+  /* 单屏 hero：占满整个视口，并与当前首页仪表盘顶部偏移保持一致 */
   .hero-fullscreen {
     height: 100svh;
-    margin-top: -6rem;
+    margin-top: -3rem;
     min-height: 480px;
   }
 </style>
 
 <script define:vars={{ heroPool }}>
   // 随机选择背景图
-  const bg = document.getElementById('hero-bg');
+  const bg = document.getElementById("hero-bg");
   if (bg && heroPool.length > 0) {
     const idx = Math.floor(Math.random() * heroPool.length);
     bg.style.backgroundImage = `url(${heroPool[idx]})`;
   }
 
   // 打字机
-  const target = document.getElementById('type-target');
-  const tw = document.getElementById('typewriter');
+  const target = document.getElementById("type-target");
+  const tw = document.getElementById("typewriter");
   if (target && tw) {
     const texts = [tw.dataset.text1, tw.dataset.text2].filter(Boolean);
     let lineIdx = 0;
@@ -88,7 +99,10 @@ const heroPool = [
       } else {
         target.textContent = full.slice(0, ++charIdx);
         if (charIdx >= full.length) {
-          setTimeout(() => { deleting = true; tick(); }, 2500);
+          setTimeout(() => {
+            deleting = true;
+            tick();
+          }, 2500);
           return;
         }
       }

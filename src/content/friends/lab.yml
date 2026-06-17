@@ -1,0 +1,8 @@
+name: "小型实验室"
+url: "https://example.net/"
+avatar: "/images/placeholders/avatar.placeholder.svg"
+description: "收集个人项目、工具和实验记录。"
+tags:
+  - "项目"
+  - "工具"
+group: "邻居"

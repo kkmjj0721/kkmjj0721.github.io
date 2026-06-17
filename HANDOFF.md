@@ -18,7 +18,7 @@
 
 ---
 
-## ✅ 已完成（Phase 1 + Phase 2）
+## ✅ 当前已完成状态
 
 ### Phase 1 — 骨架与脚手架
 
@@ -27,11 +27,11 @@
 - ✅ Markdown 管道：remark-math / remark-gfm / remark-directive / rehype-katex / rehype-slug / rehype-autolink
 - ✅ i18n 路由（zh 默认 `/`, en 在 `/en/`）+ 文案翻译表
 - ✅ 毛玻璃样式系统（`global.css` + `glass.css` + 主题变量）
-- ✅ **主色拾色器**（6 预设色 + 自定义 picker，CSS 变量 + localStorage）
+- ✅ **主色预设色块**（首页 `HomeDashboard` 暴露 6 个品牌色预设，CSS 变量 + localStorage；当前不含自定义颜色输入）
 - ✅ **深色/浅色模式切换**（手动 + 自动跟随系统）
-- ✅ **首页改成了单屏 hero**（`height: 100svh; margin-top: -6rem;`，不滚动，隐藏 footer）
-- ✅ 随机背景图（heroPool 数组）+ 打字机签名
-- ✅ Header 浮动 glass-pill 导航 + 移动端菜单 + 主色面板
+- ✅ **首页改成了单视口 dashboard**（`height: 100svh; margin-top: -3rem; overflow-y: auto;`，保持 `hideFooter`）
+- ✅ 全站共享背景由 `src/components/layout/SharedBackground.astro` 负责，含 light/dark 视频与 poster；旧 `HeroSection` 的随机背景/typewriter 组件仍在源码中但当前首页未挂载
+- ✅ Header 浮动 glass-pill 导航 + 移动端菜单
 - ✅ Footer 社交链接 + 运行天数
 - ✅ 404 页（带占位插画）
 - ✅ Open Graph + Twitter Card + canonical + RSS link
@@ -50,79 +50,52 @@
 - ✅ PostCard 组件（封面 / 标题 / 摘要 / 分类 / 标签 / 日期 / 置顶徽章）
 - ✅ PostLayout（标题区 / 封面 / 元信息 / 标签 / 版权 / 上下篇 / 相关推荐 / 评论占位 / 阅读进度条）
 - ✅ RSS endpoint
-- ✅ 5 篇 demo 文章（中文 4 + 英文 1，含系列文章 / 置顶 / 多分类多标签覆盖）
+- ✅ demo 文章（含系列文章 / 置顶 / 多分类多标签 / Phase 3 showcase 覆盖）
 
-**构建结果**: 29 个静态页面，Pagefind 索引就位，sitemap 自动生成。所有 `npx astro build` 通过。
+### Phase 3 — 文章功能增强
 
----
-
-## ⏳ 未完成（Phase 3–6）
-
-### Phase 3 — 文章功能增强 ⬅️ **下一个要做的**
-
-| 任务                  | 关键提示                                                                                                                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **TOC 浮动目录**      | 创建 `src/components/post/TOC.astro`，从 `headings` prop（`post.render()` 返回）生成；用 IntersectionObserver 做 scrollspy；插入 PostLayout 侧栏                                    |
-| **阅读进度条**        | 已经在 PostLayout 里有基础实现，可保留                                                                                                                                              |
-| **Mermaid 图表**      | 选项：装 `astro-mermaid` 集成 + 在 `astro.config.mjs` integrations 加入。或客户端方案：在 PostLayout 末尾动态 import `mermaid` 处理 `<pre class="mermaid">`                         |
-| **KaTeX 样式**        | `remark-math` + `rehype-katex` 已配置，只需在 `BaseLayout.astro` head 加 `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">`（或本地化） |
-| **Admonition CSS**    | `remark-admonitions.mjs` 已写好，`.admonition-*` CSS 已在 `typography.css`，验证后无需改动                                                                                          |
-| **视频/代码嵌入组件** | 创建 `src/components/embed/Bilibili.astro` / `YouTube.astro` / `CodePen.astro`，用 iframe + lazy loading；提供 MDX 使用示例                                                         |
-| **系列文章侧栏**      | PostLayout 中如果 `post.data.series` 存在，调用 `getSeriesPosts()` 显示侧栏目录                                                                                                     |
-| **footnotes**         | `remark-gfm` 已开启，应该已经工作。验证下 demo                                                                                                                                      |
-| **Demo 文章扩展**     | 在某篇 demo 里加全部功能展示（KaTeX 公式、Mermaid 图、admonition、Bilibili 嵌入）                                                                                                   |
+- ✅ TOC / scrollspy / 阅读进度条已集成在 `src/layouts/PostLayout.astro`
+- ✅ KaTeX CSS、Mermaid 懒渲染、GFM footnotes、admonition 样式已接入
+- ✅ 系列文章侧栏已接入 `src/components/post/SeriesSidebar.astro`
+- ✅ Bilibili / YouTube / CodePen 嵌入组件复用 `src/components/embed/EmbedFrame.astro`
+- ✅ `src/content/posts/zh/phase-3-showcase.mdx` 用于文章功能展示
 
 ### Phase 4 — 互动控件与视觉打磨
 
-| 任务                       | 关键提示                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------- |
-| **Lenis 平滑滚动**         | 装 `@studio-freight/lenis`，在 BaseLayout 末尾客户端 `<script>` 初始化            |
-| **AOS 入场动画**           | 装 `aos`，添加 `data-aos` 属性到关键卡片                                          |
-| **tsParticles 背景**       | 装 `tsparticles` slim 包，在 BaseLayout 加 canvas 容器；用户可在 settings 关闭    |
-| **鼠标拖尾**               | 纯 canvas/JS，写 `src/components/widgets/MouseTrail.astro`；监听 mousemove        |
-| **点击烟花**               | 用 canvas 粒子；监听 click                                                        |
-| **BackToTop**              | `src/components/widgets/BackToTop.astro`，scrollY > 600 时显示                    |
-| **点赞按钮**               | `src/components/post/LikeButton.tsx`（React 岛屿），localStorage 计数             |
-| **BGM 播放器**             | 用 `aplayer` 或自己写浮动 audio 控件；播放列表来自 `src/data/bgm.ts`              |
-| **涂鸦画布彩蛋**           | 键盘快捷键 `Ctrl+D` 触发全屏 canvas，可画完截图保存                               |
-| **Cookie 同意条**          | `src/components/widgets/CookieConsent.astro`，首次访问显示，localStorage 标记接受 |
-| **隐私页**                 | `src/pages/privacy.astro`（zh + en）                                              |
-| **阅读位置保存**           | PostLayout 添加 scroll position 持久化（localStorage by slug）                    |
-| **prefers-reduced-motion** | 全部动效都要尊重；在 utils 里加一个 `respectMotion()` helper                      |
+- ✅ `src/components/widgets/SiteWidgets.astro` 已集中实现 BackToTop、Cookie 同意条、指针拖尾/点击粒子、涂鸦板，并在 `astro:before-swap` 中清理事件；BGM 仅在曲目启用、授权已验证且有 provenance URL 时渲染，当前 Departures 资源禁用且未验证，默认不暴露播放 UI
+- ✅ `src/components/post/LikeButton.astro` 已实现本地点赞状态
+- ✅ `src/layouts/PostLayout.astro` 已实现阅读进度与阅读位置保存
+- ✅ `src/components/layout/Header.astro` 移动端菜单已实现 Tab 焦点陷阱、Escape 关闭和关闭后焦点回到菜单按钮
 
-### Phase 5 — 模块页面
+### Phase 5 — 模块页面路由
 
-| 任务                          | 关键提示                                                                                       |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Gallery 时间轴**            | `/gallery` 页 + `gallery` collection 已 schema 好；建一个 GalleryTimeline 组件 + Lightbox 组件 |
-| **Moments 动态**              | `/moments` 页（仿朋友圈卡片流），用 `moments` collection                                       |
-| **Anime 追番**                | `/tracking/anime` 页 + 筛选（watching/done/plan/dropped）+ 星级评分；`AnimeCard.astro` 组件    |
-| **Games 游戏**                | `/tracking/games` 页，类似上面，多个 platform 筛选                                             |
-| **Books 读书**                | `/tracking/books` 页                                                                           |
-| **Movies 电影**               | `/tracking/movies` 页                                                                          |
-| **Friends 友链**              | `/friends` 卡片宫格（头像/名称/一句话），数据放 `src/content/friends/*.yml`                    |
-| **Projects 项目**             | `/projects` 展示页，featured 在最上面                                                          |
-| **Guestbook 留言板**          | `/guestbook` 页，Phase 6 才接 Giscus                                                           |
-| **About 关于**                | `/about` 页 + 个人简介 + 技能条 + 成就徽章 + 社交链接 + GitHub 贡献图                          |
-| **Demo 数据**                 | 每个 collection 添加 2-3 条 demo 数据，用占位封面                                              |
-| **导航增加 Anime/Games 分类** | `data/nav.ts` 已经有 `tracking` 父项 + 4 个子项，验证下拉菜单                                  |
+- ✅ 已有 about、archives、categories、tags、gallery、moments、friends、projects、tracking/anime、tracking/books、tracking/games、tracking/movies 页面
+- ✅ 英文路由已覆盖 about、archives、categories、tags、gallery、moments、friends、projects、tracking 系列和 posts
+- ⚠️ 多数模块仍使用 demo/空集合状态，需要用户后续补真实内容
 
-### Phase 6 — 搜索 / 评论 / SEO / 部署
+### Phase 6 — 搜索 / 评论 / 自动化 / 部署
 
-| 任务                        | 关键提示                                                                                                      |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Pagefind 搜索框**         | 装好的 `astro-pagefind` 已生成索引；写 `SearchModal.tsx` (React 岛屿)，键盘 `Ctrl+K` 触发，使用 `pagefind` UI |
-| **Giscus 评论懒加载**       | `src/components/post/Comments.astro`，"点击加载评论" 按钮，点击后注入 giscus.json + script                    |
-| **OG 图片自动生成**         | 选项：用 `astro-og-canvas` 集成，每篇文章自动生成 1200×630 PNG                                                |
-| **CLI 脚手架**              | 写 `scripts/new-post.mjs` 用 `gray-matter` + 交互式问答 (`@inquirer/prompts`)；新建文章模板                   |
-| **图片压缩脚本**            | `scripts/compress-images.mjs` 用 `sharp` 批量转 WebP + 多尺寸                                                 |
-| **字体子集化**              | `scripts/subset-fonts.mjs` 用 `fontmin`，输出到 `public/fonts/`                                               |
-| **检查脚本**                | `scripts/check-images.mjs` grep `TODO(image)` 给出未替换列表                                                  |
-| **GitHub Actions: 部署**    | 写 `.github/workflows/deploy.yml`（详见计划文件第 5 节）                                                      |
-| **GitHub Actions: 检查**    | `.github/workflows/checks.yml`：lychee 死链 + cspell 拼写 + eslint                                            |
-| **GitHub Actions: PR 预览** | `.github/workflows/pr-preview.yml`（可选，简单方案是 artifact 上传）                                          |
-| **pre-commit 钩子**         | 装 `simple-git-hooks` + `lint-staged`，git commit 前自动 lint                                                 |
-| **真正推送上线**            | 仓库 Settings → Pages → Source 选 GitHub Actions；push main → 等部署                                          |
+- ✅ Pagefind 搜索入口已实现：`src/components/search/SearchModal.astro`，首页 dashboard 已挂载
+- ✅ Giscus 评论/留言入口已实现：`src/components/post/Comments.astro`，未配置真实 ID 时受保护显示，不会加载无效脚本
+- ✅ npm 脚本已覆盖内容脚手架、图片检查/压缩、字体子集化、lint、build
+- ✅ GitHub Actions 已有 `deploy.yml`、`checks.yml`、`pr-preview.yml`，均使用 npm
+
+**最近已知验证**: `ARCHITECTURE_CONTEXT.md` 记录过 `npm run lint`、`npm run build`、`npm run check:images -- --allow-placeholders`、`node --check scripts/*.mjs` 等通过；本次发布验证已确认 `npm run lint`、`npm run build`、路由检查、widgets/like button、BGM HTML 排除、reduced-motion/search focus/stale sweep 全部通过，并达到 `[ALL_TESTS_PASSED]`。
+
+---
+
+## ⏳ 当前剩余实现缺口
+
+### Phase 4 — 互动控件与视觉打磨
+
+核心互动控件已完成：BackToTop、点赞、Cookie 同意条、指针拖尾/点击粒子、涂鸦板、隐私页、阅读进度和阅读位置保存均已接入。BGM 资源仍保留在 `public/audio/bgm/` 作为用户提供/待替换素材，首页和默认 UI 不暴露未验证曲目的播放入口。当前实现使用轻量原生 JS/CSS，没有引入 Lenis、AOS 或 tsParticles；这些库仅作为后续可选视觉增强，不是当前实现缺口。
+
+### 内容与私有配置
+
+- ⏳ demo/真实内容：gallery、moments、tracking、friends、projects 等集合需要用户补真实条目和图片
+- ⏳ 音频治理：`public/audio/bgm/Departures.mp3` 保留为用户提供/待替换资源，首页和默认 UI 不再暴露播放入口；若要重新启用，需先补来源/授权说明或替换为已验证曲目
+- ⏳ 外部私有配置：Giscus repo/category ID、社交链接、邮箱、头像、背景/封面等真实资产需要用户提供
+- ⏳ 可选 SEO 增强：自动 OG 图片生成尚未接入
 
 ---
 
@@ -132,14 +105,14 @@
 2. **i18n 路由**: 中文默认 `/`，英文 `/en/`；`getLangFromUrl(Astro.url)` + `useTranslations(lang)` 获取
 3. **URL 约定**: 文章 URL 不带语言子目录前缀（`/posts/hello-world/` 而不是 `/posts/zh/hello-world/`），用 `postUrl(post)` 工具生成
 4. **文件组织**: 中英文 markdown 分目录管理（`src/content/posts/zh/` 与 `src/content/posts/en/`），靠 frontmatter `lang:` 字段过滤
-5. **主题主色**: 用 CSS 变量驱动（`--color-brand` 及 50–900 色阶），切换时只需 `document.documentElement.style.setProperty`
+5. **主题主色**: 用 CSS 变量驱动（`--color-brand` 及 50–900 色阶）；当前 UI 在首页 `HomeDashboard` 提供亮色 / 暗色 / 自动按钮和品牌预设色块，Header 只包含导航与移动端菜单
 6. **图片占位约定**:
    - 占位文件名带 `.placeholder.` 中缀（如 `hero-01.placeholder.svg`），易 grep
    - 代码里加 `{/* TODO(image): ... */}` 注释
    - 用户在 `IMAGES.md` 看清单
-7. **不要安装 pnpm**: 环境只有 npm（11.12.1）+ Node 24.15.0
-8. **GitHub Actions deploy.yml 改用 npm**: 计划文件里写的是 pnpm，实际部署要改成 npm install
-9. **首页是单屏 hero**: 不要再加滚动卡片！用户明确要求"刚好背面能看到背景图"。修改首页时保持 `<BaseLayout noContainer hideFooter>`
+7. **不要安装 pnpm**: 环境使用 npm + Node 24，CI 也按 npm 走
+8. **GitHub Actions 使用 npm**: `.github/workflows/deploy.yml` / `checks.yml` / `pr-preview.yml` 均使用 `npm ci` 和 `npm run build`
+9. **首页是单视口 dashboard**: 不要再加长页面内容；当前 `HomeDashboard` 使用 `height: 100svh; margin-top: -3rem; overflow-y: auto;`，修改首页时保持 `<BaseLayout noContainer hideFooter>`
 10. **代码注释极简**: 用户不需要每行注释。frontmatter 占位标记保留（`TODO(image)` / `TODO(content)`）
 
 ---
@@ -157,13 +130,16 @@ my_blog/
 ├── src/data/nav.ts               # 导航菜单（完全体 11 项 + tracking 子菜单）
 ├── src/i18n/ui.ts                # 中英 UI 文案 + getLangFromUrl + useTranslations
 │
-├── src/layouts/BaseLayout.astro  # HTML 外壳，hideFooter prop 已支持
+├── src/layouts/BaseLayout.astro  # HTML 外壳，hideFooter prop 已支持，挂载 SharedBackground
 ├── src/layouts/PageLayout.astro  # 普通页面（带 glass 容器）
-├── src/layouts/PostLayout.astro  # 文章页（封面/上下篇/相关推荐/阅读进度条）
+├── src/layouts/PostLayout.astro  # 文章页（TOC/系列/评论入口/上下篇/相关推荐/阅读进度条）
 │
-├── src/components/layout/Header.astro    # 导航 + 主题/主色/语言切换
+├── src/components/layout/Header.astro    # 透明 glass 导航 + 移动端菜单
 ├── src/components/layout/Footer.astro    # 社交 + 运行天数
-├── src/components/home/HeroSection.astro # 单屏 hero + 打字机
+├── src/components/layout/SharedBackground.astro # 全站 light/dark 视频背景 + poster
+├── src/components/home/HomeDashboard.astro # 单视口 dashboard 内容 + 搜索入口 + 主题模式按钮 + 品牌色预设
+├── src/components/search/SearchModal.astro # Pagefind 搜索弹窗
+├── src/components/post/Comments.astro    # Giscus 受保护懒加载入口
 ├── src/components/post/PostCard.astro    # 列表卡片
 │
 ├── src/utils/posts.ts            # 文章相关全部 utils（必读）
@@ -173,17 +149,20 @@ my_blog/
 ├── src/plugins/remark-reading-time.mjs   # 阅读时间计算
 │
 ├── src/content/config.ts         # 9 个集合的 Zod schema（⭐必读）
-├── src/content/posts/zh/*.md     # 4 篇中文 demo
+├── src/content/posts/zh/*.md     # 中文 demo / showcase
 ├── src/content/posts/en/*.md     # 1 篇英文 demo
 │
-├── src/pages/index.astro          # 中文首页（单屏 hero）
-├── src/pages/en/index.astro       # 英文首页（单屏 hero）
+├── src/pages/index.astro          # 中文首页（单屏 dashboard，挂载 HomeDashboard）
+├── src/pages/en/index.astro       # 英文首页（单屏 dashboard，挂载 HomeDashboard）
 ├── src/pages/posts/[...slug].astro
 ├── src/pages/en/posts/[...slug].astro
 ├── src/pages/posts/index.astro    # 文章列表
 ├── src/pages/archives.astro       # 时间轴归档
 ├── src/pages/categories/index.astro + [category].astro
 ├── src/pages/tags/index.astro + [tag].astro  # 标签云
+├── src/pages/gallery/ moments/ friends/ projects/ tracking/  # 模块页面
+├── src/pages/guestbook.astro      # Giscus 留言入口（需真实配置）
+├── src/pages/privacy.astro        # 隐私页
 ├── src/pages/rss.xml.ts           # RSS endpoint
 ├── src/pages/404.astro
 │
@@ -213,12 +192,12 @@ my_blog/
 项目交接文档: /home/kk/github/my_blog/HANDOFF.md ← 先 Read 这个
 
 【现状】
-- Phase 1（骨架）和 Phase 2（内容系统）已完成
-- 29 个静态页面，最近一次 npx astro build 全绿
-- 首页是单屏 hero（用户明确不要滚动），改时要保持 <BaseLayout noContainer hideFooter>
+- Phase 1/2/3 已完成，Phase 5 路由壳、Phase 6 搜索/评论入口/自动化已基本就位
+- Pagefind 搜索、受保护的 Giscus 评论/留言入口、npm 脚本、GitHub Actions 已存在
+- 首页是单视口 dashboard，改时要保持 <BaseLayout noContainer hideFooter>，并保留当前 `height: 100svh; margin-top: -3rem; overflow-y: auto;` 的布局约束
 
 【请继续做】
-Phase 3：文章功能增强（TOC、KaTeX 样式表、Mermaid、Admonitions 验证、视频/代码嵌入组件、系列文章侧栏）
+优先处理剩余缺口：模块真实/demo 内容补齐、BGM 来源/授权或替换策略（当前默认不暴露播放 UI）、Giscus/社交/邮箱等私有配置，以及可选 OG 图片生成/视觉增强。
 
 【约束】
 - 不安装 pnpm，只用 npm（v11）+ Node 24
@@ -227,12 +206,12 @@ Phase 3：文章功能增强（TOC、KaTeX 样式表、Mermaid、Admonitions 验
 - 中英 i18n 字符串补 src/i18n/ui.ts，新增 key 必须 zh + en 都加
 - 代码注释极简，frontmatter 里的 TODO(image) / TODO(content) 占位保留
 - 图片全部用占位 SVG，用户后期自己换
-- 完成后跑 npx astro build 验证
+- 完成后跑 npm run build 验证
 
 【任务跟踪】
-TaskList 里已经有 Phase 3–6 的占位任务，开始时 TaskUpdate Phase 3 to in_progress。
+TaskList 里的早期 Phase 状态可能已经落后，先按本文“当前已完成状态/当前剩余实现缺口”核对。
 
-先读 HANDOFF.md 全文，再读 src/utils/posts.ts、src/layouts/PostLayout.astro、astro.config.mjs，然后开始 Phase 3。
+先读 HANDOFF.md 全文，再按任务读相关组件和 `ARCHITECTURE_CONTEXT.md`，避免重复实现已完成项。
 ```
 
 ---
@@ -246,10 +225,10 @@ cd /home/kk/github/my_blog
 ls node_modules > /dev/null || npm install
 
 # 构建（必跑）
-npx astro build
+npm run build
 
 # 本地预览
-npx astro dev --host 127.0.0.1 --port 4321
+npm run dev -- --host 127.0.0.1 --port 4321
 # 然后访问 http://127.0.0.1:4321/
 
 # 关键路径自检
@@ -270,10 +249,10 @@ curl -s -o /dev/null -w "%{http_code} /en/posts/hello-world/\n" http://127.0.0.1
 ```
 #2  Phase 1: 项目骨架与脚手架     ✅ completed
 #3  Phase 2: 核心内容系统          ✅ completed
-#4  Phase 3: 文章功能增强          ⏳ pending  ← 下一个
-#5  Phase 4: 互动控件与视觉打磨    ⏳ pending
-#6  Phase 5: 追踪/相册/动态/友链/项目  ⏳ pending
-#7  Phase 6: 搜索/SEO/部署/自动化  ⏳ pending
+#4  Phase 3: 文章功能增强          ✅ completed
+#5  Phase 4: 互动控件与视觉打磨    ✅ core widgets complete / ⏳ optional polish
+#6  Phase 5: 追踪/相册/动态/友链/项目  ✅ route shells / ⏳ real content
+#7  Phase 6: 搜索/SEO/部署/自动化  ✅ search/comments/tooling/CI / ⏳ private config + optional OG
 ```
 
 ---
@@ -284,10 +263,11 @@ curl -s -o /dev/null -w "%{http_code} /en/posts/hello-world/\n" http://127.0.0.1
 
 - ✅ GitHub 用户名: `kkmjj0721`
 - ✅ 仓库名: `kkmjj0721.github.io`
-- ⏳ 真实站点名 / 副标题 / 签名（现用 `星之回廊` / `Stellar Corridor` 占位）
+- ⏳ 真实副标题 / 签名 / 作者简介等个人内容（站点中文标题当前为 `奈奈奈奈奈绪の博客`）
 - ⏳ 真实头像（现用 SVG 占位 "kk"）
+- ⏳ BGM 来源/授权说明，或替换/移除默认 `public/audio/bgm/Departures.mp3`；当前首页和默认 UI 不暴露该未验证曲目
 
-**Phase 6 之前需要**:
+**启用评论/留言前需要**:
 
 - ⏳ 启用 GitHub Discussions 并配置 Giscus
 - ⏳ 把 `src/data/site.ts` 的 `giscus.repoId / categoryId / guestbookCategoryId` 改成真实值
@@ -305,5 +285,5 @@ curl -s -o /dev/null -w "%{http_code} /en/posts/hello-world/\n" http://127.0.0.1
 3. **完整 6 阶段交付**：用户选了"完全体"，所有番剧/游戏/读书/电影追踪页都要做
 4. **域名暂不买**：先用 `kkmjj0721.github.io` 默认域名，但代码里要预留 `siteUrl` 切换位
 5. **双主题**：手动 + 自动跟随系统，都要支持
-6. **主色用户可改**：首页拾色器已实现，6 预设色 + 自定义 picker，写入 localStorage
+6. **主色用户可改**：首页 `HomeDashboard` 已实现 6 个品牌色预设色块，写入 localStorage；当前没有自定义颜色输入或 Header 颜色控制
 7. **中英双语**：i18n 切换，新增 UI 字符串必须 zh + en 都补

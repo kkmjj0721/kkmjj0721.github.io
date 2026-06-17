@@ -1,0 +1,154 @@
+---
+import { Icon } from "astro-icon/components";
+import type { Lang } from "@i18n/ui";
+
+export interface Props {
+  lang?: Lang;
+}
+
+const { lang = "zh" } = Astro.props;
+const copy =
+  lang === "zh"
+    ? {
+        like: "喜欢",
+        liked: "已喜欢",
+      }
+    : {
+        like: "Like",
+        liked: "Liked",
+      };
+---
+
+<div class="post-like" data-post-like data-pagefind-ignore>
+  <button
+    class="post-like__button"
+    type="button"
+    data-like-button
+    aria-pressed="false"
+    data-like-label={copy.like}
+    data-liked-label={copy.liked}
+  >
+    <Icon name="mdi:heart-outline" class="h-5 w-5" data-like-empty />
+    <Icon name="mdi:heart" class="hidden h-5 w-5" data-like-filled />
+    <span data-like-text>{copy.like}</span>
+    <span class="post-like__count" data-like-count>0</span>
+  </button>
+  <span class="sr-only" data-like-status aria-live="polite"></span>
+</div>
+
+<script>
+  const POST_LIKE_BOUND_KEY = "__blogPostLikeBound";
+
+  function postLikeKey() {
+    const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+    return `blog:post-like:${pathname}`;
+  }
+
+  function readLiked(key) {
+    try {
+      return localStorage.getItem(key) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function writeLiked(key, liked) {
+    try {
+      if (liked) {
+        localStorage.setItem(key, "1");
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {}
+  }
+
+  function initPostLikeButtons() {
+    document.querySelectorAll("[data-post-like]").forEach((root) => {
+      const button = root.querySelector("[data-like-button]");
+      const label = root.querySelector("[data-like-text]");
+      const count = root.querySelector("[data-like-count]");
+      const status = root.querySelector("[data-like-status]");
+      const emptyIcon = root.querySelector("[data-like-empty]");
+      const filledIcon = root.querySelector("[data-like-filled]");
+      if (!(button instanceof HTMLButtonElement)) return;
+      if (button.dataset.ready === "true") return;
+
+      const key = postLikeKey();
+      const likeLabel = button.dataset.likeLabel || "Like";
+      const likedLabel = button.dataset.likedLabel || "Liked";
+
+      const render = (liked) => {
+        button.setAttribute("aria-pressed", String(liked));
+        button.classList.toggle("is-liked", liked);
+        emptyIcon?.classList.toggle("hidden", liked);
+        filledIcon?.classList.toggle("hidden", !liked);
+        if (label) label.textContent = liked ? likedLabel : likeLabel;
+        if (count) count.textContent = liked ? "1" : "0";
+        if (status) status.textContent = liked ? likedLabel : likeLabel;
+      };
+
+      render(readLiked(key));
+      button.addEventListener("click", () => {
+        const next = button.getAttribute("aria-pressed") !== "true";
+        writeLiked(key, next);
+        render(next);
+      });
+
+      button.dataset.ready = "true";
+    });
+  }
+
+  if (!window[POST_LIKE_BOUND_KEY]) {
+    document.addEventListener("astro:page-load", initPostLikeButtons);
+    window[POST_LIKE_BOUND_KEY] = true;
+  }
+
+  initPostLikeButtons();
+</script>
+
+<style>
+  .post-like {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .post-like__button {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgb(var(--glass-border) / 0.28);
+    border-radius: 9999px;
+    background: rgb(var(--color-brand) / 0.1);
+    padding: 0.45rem 0.9rem;
+    color: rgb(var(--color-ink));
+    font-weight: 800;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .post-like__button:hover,
+  .post-like__button.is-liked {
+    background: rgb(var(--color-brand) / 0.18);
+    color: rgb(var(--color-brand-700));
+    transform: translateY(-1px);
+  }
+
+  .post-like__count {
+    display: inline-grid;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    place-items: center;
+    border-radius: 9999px;
+    background: rgb(var(--color-surface) / 0.56);
+    font-size: 0.75rem;
+  }
+
+  :global([data-theme="dark"]) .post-like__button:hover,
+  :global([data-theme="dark"]) .post-like__button.is-liked {
+    color: rgb(var(--color-brand-300));
+  }
+</style>

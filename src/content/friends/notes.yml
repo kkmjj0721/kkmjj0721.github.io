@@ -1,0 +1,8 @@
+name: "纸上备忘"
+url: "https://example.org/"
+avatar: "/images/placeholders/avatar.placeholder.svg"
+description: "偏技术笔记与阅读摘录的小站。"
+tags:
+  - "技术"
+  - "阅读"
+group: "朋友"
