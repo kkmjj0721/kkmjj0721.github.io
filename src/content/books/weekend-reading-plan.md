@@ -4,6 +4,6 @@ author: "待定"
 status: "plan"
 cover: "/images/placeholders/hero-03.placeholder.svg"
 tags:
-  - "TODO"
+  - "待整理"
   - "读书计划"
 ---

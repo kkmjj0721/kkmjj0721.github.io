@@ -3,11 +3,13 @@ import { getCollection } from "astro:content";
 import EmptyState from "@components/collection/EmptyState.astro";
 import PageLayout from "@layouts/PageLayout.astro";
 
-const friends = (await getCollection("friends")).sort((a, b) => {
-  const groupCompare = a.data.group.localeCompare(b.data.group, "zh-Hans-CN");
-  if (groupCompare !== 0) return groupCompare;
-  return a.data.name.localeCompare(b.data.name, "zh-Hans-CN");
-});
+const friends = (await getCollection("friends"))
+  .filter((friend) => !friend.data.group.startsWith("__draft"))
+  .sort((a, b) => {
+    const groupCompare = a.data.group.localeCompare(b.data.group, "zh-Hans-CN");
+    if (groupCompare !== 0) return groupCompare;
+    return a.data.name.localeCompare(b.data.name, "zh-Hans-CN");
+  });
 
 const grouped = friends.reduce<Record<string, typeof friends>>(
   (acc, friend) => {

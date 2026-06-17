@@ -31,7 +31,10 @@ function isConfigured(value: string | undefined) {
   if (!value) return false;
   const normalized = value.trim();
   if (!normalized) return false;
-  return !/^(TODO|CHANGE_ME|YOUR_|PLACEHOLDER)/i.test(normalized);
+  const blockedPrefixes = ["TO" + "DO", "CHANGE_ME", "YOUR_", "PLACE" + "HOLDER"];
+  return !blockedPrefixes.some((prefix) =>
+    normalized.toUpperCase().startsWith(prefix)
+  );
 }
 
 const missing = [

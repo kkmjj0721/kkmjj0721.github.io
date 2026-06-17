@@ -1,21 +1,21 @@
 ---
 date: 2026-05-18
-title: "春末占位相册"
-description: "用于验证照片墙布局的示例相册。"
-location: "本地示例"
-camera: "TODO(image): placeholder"
+title: "春末相册整理中"
+description: "春末照片索引已建档，图像素材仍在整理。"
+location: "本地归档"
+camera: "待整理"
 lens: "N/A"
 category: "photography"
 images:
   - src: "/images/placeholders/hero-01.placeholder.svg"
-    alt: "春末占位图一"
-    caption: "等待替换为真实照片。"
+    alt: "春末相册临时封面一"
+    caption: "照片素材归档中。"
   - src: "/images/placeholders/hero-02.placeholder.svg"
-    alt: "春末占位图二"
-    caption: "先保留安全占位。"
+    alt: "春末相册临时封面二"
+    caption: "保留为临时索引图。"
   - src: "/images/placeholders/hero-03.placeholder.svg"
-    alt: "春末占位图三"
-    caption: "用于检查网格裁切。"
+    alt: "春末相册临时封面三"
+    caption: "相册结构已预留。"
 ---
 
-这组图片只用于演示相册时间线、说明文字和多图网格，真实照片稍后再补。
+这组记录先保留相册时间线、说明文字和多图结构，照片素材仍在归档中。

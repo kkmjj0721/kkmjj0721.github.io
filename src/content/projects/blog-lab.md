@@ -1,8 +1,6 @@
 ---
 name: "博客内容实验室"
-description: "用于验证 Astro 内容集合、筛选和卡片布局的演示项目。"
-url: "https://example.com/"
-repo: "https://github.com/example/blog-lab"
+description: "整理 Astro 内容集合、筛选和卡片布局的站内实验记录。"
 tech:
   - "Astro"
   - "TypeScript"
@@ -13,4 +11,4 @@ status: "active"
 date: 2026-06-01
 ---
 
-这个条目用于演示精选项目布局：封面、状态、时间、技术标签和外部链接都会显示。
+这个条目记录博客内容集合的整理过程：封面、状态、时间和技术标签会随维护进度更新。

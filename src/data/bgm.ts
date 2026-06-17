@@ -14,7 +14,7 @@ export const bgmTracks = [
     title: "Departures",
     artist: "EGOIST",
     src: "/audio/bgm/Departures.mp3",
-    enabled: false,
+    enabled: true,
     licenseStatus: "unverified",
   },
 ] as const satisfies readonly BgmTrack[];

@@ -1,7 +1,6 @@
 /**
  * 站点核心元数据
  * ──────────────────────────────────────────────
- * TODO(content): 把以下字段都改成你自己的
  * 未来切换自定义域名: 只改 siteUrl + base（如果是项目页面）+ 仓库根放 CNAME
  */
 export const site = {
@@ -13,7 +12,7 @@ export const site = {
 
   /** 站点名（zh/en 双语）*/
   title: {
-    zh: "奈奈奈奈奈绪の博客", // TODO(content): 改为你的站点名
+    zh: "奈奈奈奈奈绪の博客",
     en: "奈奈奈奈奈绪の博客",
   },
 
@@ -46,7 +45,7 @@ export const site = {
     /** 头像（占位，后期替换 public/images/avatar/avatar.png）*/
     avatar: "/images/placeholders/avatar.placeholder.svg",
     /** 邮箱 */
-    email: "your-email@example.com", // TODO(content)
+    email: "",
   },
 
   /** 社交链接：set show:false 可隐藏 */
@@ -60,27 +59,27 @@ export const site = {
     {
       name: "X (Twitter)",
       icon: "simple-icons:x",
-      url: "https://x.com/your-handle",
+      url: "",
       show: false,
-    }, // TODO(content)
+    },
     {
       name: "Bilibili",
       icon: "simple-icons:bilibili",
-      url: "https://space.bilibili.com/your-id",
+      url: "",
       show: false,
-    }, // TODO(content)
+    },
     {
       name: "QQ",
       icon: "simple-icons:tencentqq",
-      url: "tencent://message/?uin=12345678",
+      url: "",
       show: false,
-    }, // TODO(content)
+    },
     {
       name: "Email",
       icon: "mdi:email",
-      url: "mailto:your-email@example.com",
-      show: true,
-    }, // TODO(content)
+      url: "",
+      show: false,
+    },
     { name: "RSS", icon: "mdi:rss", url: "/rss.xml", show: true },
   ],
 
@@ -98,14 +97,14 @@ export const site = {
     ],
   },
 
-  /** Giscus 评论配置（Phase 5/6 才会真正用上，先留位）*/
+  /** Giscus 评论配置：留空时评论组件会保持关闭状态。*/
   giscus: {
-    repo: "kkmjj0721/kkmjj0721.github.io", // TODO(content): 启用 Discussions 后替换
-    repoId: "TODO_REPO_ID",
-    category: "General",
-    categoryId: "TODO_CATEGORY_ID",
-    guestbookCategory: "Guestbook",
-    guestbookCategoryId: "TODO_GUESTBOOK_CATEGORY_ID",
+    repo: "",
+    repoId: "",
+    category: "",
+    categoryId: "",
+    guestbookCategory: "",
+    guestbookCategoryId: "",
     mapping: "pathname",
     reactionsEnabled: "1",
     inputPosition: "top",

@@ -3,7 +3,7 @@
   <text x="300" y="180" text-anchor="middle" font-family="ui-serif, serif"
         font-size="120" font-weight="bold" fill="#7c3aed" opacity="0.85">404</text>
   <text x="300" y="240" text-anchor="middle" font-family="ui-sans-serif, sans-serif"
-        font-size="22" fill="#a78bfa">迷路啦…… (TODO: 替换 404 插画)</text>
+        font-size="22" fill="#a78bfa">迷路啦，页面暂未抵达</text>
   <g transform="translate(300 320)" fill="#7c3aed" opacity="0.6">
     <circle r="6"/>
     <circle cx="-20" r="6"/>

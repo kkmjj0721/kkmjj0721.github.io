@@ -1,7 +1,6 @@
 ---
 name: "阅读书架"
 description: "把读书、观影和番剧条目整理成统一追踪页面。"
-repo: "https://github.com/example/reading-shelf"
 tech:
   - "Content Collections"
   - "YAML"
@@ -12,4 +11,4 @@ status: "maintenance"
 date: 2026-05-10
 ---
 
-演示普通项目卡片，重点检查状态标签、技术栈截断和 Markdown 正文渲染。
+归档中的内容追踪条目，当前用于记录阅读、观影和番剧页面的整理方向。

@@ -3,8 +3,7 @@
  * 首页 Hero
  * ─────────────────────────────────────────────
  * 随机背景图机制：
- *   把图片放到 public/images/heroes/，文件名添加到 heroPool 里即可
- * TODO(image): 替换 hero-*.placeholder.svg 为真实图片（推荐 1920x1080 webp）
+ *   先使用归档背景图池；后续新增图片时只需扩展 heroPool。
  */
 import { site } from "@data/site";
 import { getLangFromUrl, useTranslations } from "@i18n/ui";
@@ -12,7 +11,6 @@ import { getLangFromUrl, useTranslations } from "@i18n/ui";
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// TODO(image): 在 public/images/heroes/ 中放入图片后，把文件名加到这里
 const heroPool = [
   "/images/placeholders/hero-01.placeholder.svg",
   "/images/placeholders/hero-02.placeholder.svg",

@@ -16,7 +16,7 @@ const href = postUrl(post);
 <article class="glass glass-hover p-5 md:p-6 flex flex-col md:flex-row gap-5">
   {post.data.cover && (
     <a href={href} class="block md:w-48 md:flex-shrink-0">
-      {/* TODO(image): 自动渲染封面图，作者只需在 frontmatter 写 cover */}
+      {/* Cover images are resolved from the post frontmatter. */}
       <img
         src={typeof post.data.cover === 'string' ? post.data.cover : post.data.cover.src}
         alt={post.data.coverAlt ?? post.data.title}

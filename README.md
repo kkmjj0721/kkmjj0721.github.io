@@ -18,6 +18,8 @@ npm run build
 npm run preview
 ```
 
+本地如需预览现有未验证 BGM，可运行 `PUBLIC_ENABLE_UNVERIFIED_BGM=true npm run dev`。生产部署默认不要设置该变量；只有 `licenseStatus: "verified"` 的曲目才会默认渲染。
+
 ## 📁 项目结构
 
 ```
@@ -41,7 +43,7 @@ public/
 
 ### 1. 改站点信息
 
-打开 `src/data/site.ts`，把所有 `TODO(content)` 标记的字段改成你自己的。
+站点名称、作者、社交入口、评论开关等信息集中维护在 `src/data/site.ts`。发布前按当前站点实际状态校对这些字段，并在私有配置变更后重新运行 lint 与构建。
 
 ### 2. 改图片
 
@@ -92,14 +94,14 @@ draft: false
 - [x] Phase 2: 内容系统（文章 / 标签 / 归档 / RSS）
 - [x] Phase 3: 文章功能（TOC / KaTeX / Mermaid / Admonitions / 嵌入组件 / 系列文章）
 - [x] Phase 4: 互动控件与视觉打磨（主题、主色、BackToTop、点赞、Cookie、指针动效、阅读位置、涂鸦板、隐私页、移动菜单焦点陷阱已实现；BGM 资源保留但首页播放 UI 默认关闭，待来源/授权确认或替换后再启用）
-- [x] Phase 5: 模块页面路由（相册 / 动态 / 追番 / 游戏 / 读书 / 电影 / 友链 / 项目 / 关于；真实内容仍待替换）
-- [x] Phase 6: 搜索 / 评论 / CI / 部署（Pagefind、受保护的 Giscus 入口、npm 脚本、GitHub Actions 已实现；真实 Giscus ID 和私有配置仍需用户提供）
+- [x] Phase 5: 模块页面路由（相册 / 动态 / 追番 / 游戏 / 读书 / 电影 / 友链 / 项目 / 关于；内容通过 `src/content/` 按集合维护）
+- [x] Phase 6: 搜索 / 评论 / CI / 部署（Pagefind、受保护的 Giscus 入口、npm 脚本、GitHub Actions 已实现；Giscus ID 和私有配置按部署环境维护）
 
 ## 🔧 自动化与私有配置状态
 
 - 已有 npm 脚本：`new` / `new:moment` / `new:gallery` / `compress` / `subset-fonts` / `check:images` / `lint` / `build`
 - 已有 GitHub Actions：`deploy.yml`、`checks.yml`、`pr-preview.yml`，均使用 npm
-- 仍需用户替换：`TODO(content)` 个人信息、占位图片、真实社交/邮箱、Giscus `repoId` / `categoryId` / `guestbookCategoryId`
+- 私有配置维护项：个人信息、图片资源、社交/邮箱入口、Giscus `repoId` / `categoryId` / `guestbookCategoryId`
 - 当前实现会在 Giscus 未配置时显示保护提示，不会加载无效评论脚本
 - 发布验证：`npm run lint`、`npm run build`、路由检查、widgets/like button、BGM HTML 排除、reduced-motion/search focus/stale sweep 均已通过
 
